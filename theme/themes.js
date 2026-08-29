@@ -1,0 +1,107 @@
+export const BASE_COLORS = {
+    white: "#FFFFFF",
+    black: "#000000",
+    red: "#FF5252",
+    orange: "#E89149",
+    transparent: "transparent",
+};
+
+export const THEMES = {
+    leafly: {
+        accent: "#e3cfa8",
+        accentMuted: "rgba(227, 207, 168, 0.35)",
+        main: "#132a22",
+        dark: "#0a1813",
+        overlay: "rgba(5, 12, 10, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#0a1813",
+    },
+    finik: {
+        accent: "#f5caa7",
+        accentMuted: "rgba(245, 202, 167, 0.35)",
+        main: "#385144",
+        dark: "#2d4237",
+        overlay: "rgba(0, 0, 0, 0.8)",
+        text: "#FFFFFF",
+        textDark: "#2d4237",
+    },
+    geekly: {
+        accent: "#7D8AFF",
+        accentMuted: "rgba(125, 138, 255, 0.35)",
+        main: "#0B1534",
+        dark: "#050B28",
+        overlay: "rgba(2, 4, 10, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#FFFFFF",
+    },
+    nordic: {
+        accent: "#f2e0d0",
+        accentMuted: "rgba(242, 224, 208, 0.35)",
+        main: "#738ab4",
+        dark: "#6479a1",
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#6479a1",
+    },
+    berry: {
+        accent: "#f0cdd2",
+        accentMuted: "rgba(240, 205, 210, 0.35)",
+        main: "#3c1950",
+        dark: "#4a2461",
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#4a2461",
+    },
+    coffee: {
+        accent: "#eccdb1",
+        accentMuted: "rgba(236, 205, 177, 0.35)",
+        main: "#44252b",
+        dark: "#2e1116",
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#2e1116",
+    },
+    pumpkin: {
+        accent: "#ffb07c",
+        accentMuted: "rgba(255, 176, 124, 0.35)",
+        main: "#2d1f1e",
+        dark: "#1f1414",
+        overlay: "rgba(15, 10, 10, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#1f1414",
+    },
+    sakura: {
+        accent: "#fbcad0",
+        accentMuted: "rgba(251, 202, 208, 0.35)",
+        main: "#211c27",
+        dark: "#17131c",
+        overlay: "rgba(10, 8, 13, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#17131c",
+    },
+    sage: {
+        accent: "#c2d8c4",
+        accentMuted: "rgba(194, 216, 196, 0.35)",
+        main: "#222222",
+        dark: "#1a1a1a",
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#1a1a1a",
+    },
+    violet: {
+        accent: "#B388FF",
+        accentMuted: "rgba(179, 136, 255, 0.35)",
+        main: "#1C132B",
+        dark: "#0F0A1C",
+        overlay: "rgba(10, 6, 20, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#FFFFFF",
+    },
+};
+
+export const DEFAULT_THEME_NAME = "geekly";
+
+export const getThemeColors = (themeName = DEFAULT_THEME_NAME) => ({
+    ...BASE_COLORS,
+    ...(THEMES[themeName] || THEMES[DEFAULT_THEME_NAME]),
+});
