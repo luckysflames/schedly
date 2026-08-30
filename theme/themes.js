@@ -7,6 +7,15 @@ export const BASE_COLORS = {
 };
 
 export const THEMES = {
+    schedly: {
+        accent: "#0d82fd",
+        accentMuted: "rgba(13, 130, 253, 0.35)",
+        main: "#121212",
+        dark: "#000000",
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#FFFFFF",
+        textDark: "#1a1b1c",
+    },
     leafly: {
         accent: "#e3cfa8",
         accentMuted: "rgba(227, 207, 168, 0.35)",
@@ -99,7 +108,7 @@ export const THEMES = {
     },
 };
 
-export const DEFAULT_THEME_NAME = "geekly";
+export const DEFAULT_THEME_NAME = "schedly";
 
 export const getThemeColors = (themeName = DEFAULT_THEME_NAME) => ({
     ...BASE_COLORS,

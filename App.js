@@ -113,7 +113,7 @@ export default function App() {
                 edges={["top"]}
             >
                 <NavigationContainer theme={AppTheme}>
-                    <StatusBar style="light" backgroundColor={currentMainColor} />
+                    <StatusBar style="light" />
                     <Stack.Navigator screenOptions={screenOptions}>
                         <Stack.Screen name="MainTabs" component={HomeTabs} />
                     </Stack.Navigator>

@@ -1,37 +1,9 @@
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import { View, FlatList, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
-import { WeekContent } from "./WeekContent";
-import { useScheduleGrid } from "../../../hooks/useScheduleGrid";
+import { SchedulePage } from "./SchedulePage";
 
-const SchedulePage = React.memo(
-    ({ scheduleData, weekOffset, hours, getLessonPosition, onSelectLesson }) => {
-        const screenWidth = Dimensions.get("window").width;
-        // Достаем weekNumber из хука
-        const { daysList, weekNumber } = useScheduleGrid(scheduleData, weekOffset);
-
-        return (
-            <View style={{ width: screenWidth, flex: 1 }}>
-                <WeekContent
-                    daysList={daysList}
-                    hours={hours}
-                    weekNumber={weekNumber}
-                    getLessonPosition={getLessonPosition}
-                    onSelectLesson={onSelectLesson}
-                />
-            </View>
-        );
-    },
-);
-
-export const ScheduleGrid = ({
-    scheduleData,
-    hours,
-    getLessonPosition,
-    onSelectLesson,
-    weekOffset,
-    onChangeWeekOffset,
-}) => {
+export const ScheduleGrid = ({ scheduleData, onSelectLesson, weekOffset, onChangeWeekOffset }) => {
     const { theme } = useTheme();
     const screenWidth = Dimensions.get("window").width;
     const flatListRef = useRef(null);
@@ -51,7 +23,7 @@ export const ScheduleGrid = ({
             const contentOffsetX = event.nativeEvent.contentOffset.x;
             const pageIndex = Math.round(contentOffsetX / screenWidth);
             currentIndexRef.current = pageIndex;
-            setIsJumping(false); // Скрываем лоадер по окончании скролла
+            setIsJumping(false);
             const targetWeekOffset = pageIndex - CENTER_INDEX;
 
             if (targetWeekOffset !== weekOffset) {
@@ -66,7 +38,6 @@ export const ScheduleGrid = ({
         if (flatListRef.current) {
             const distance = Math.abs(targetIndex - currentIndexRef.current);
 
-            // Если прыжок далеко, показываем лоадер, так как рендер займет время
             if (distance > 2) {
                 setIsJumping(true);
             }
@@ -75,10 +46,9 @@ export const ScheduleGrid = ({
 
             flatListRef.current.scrollToIndex({
                 index: targetIndex,
-                animated: distance <= 2, // Плавно только если рядом
+                animated: distance <= 2,
             });
 
-            // Страховка на случай если скролл мгновенный и моментум не вызовется
             if (distance > 2) {
                 const timer = setTimeout(() => setIsJumping(false), 300);
                 return () => clearTimeout(timer);
@@ -104,9 +74,7 @@ export const ScheduleGrid = ({
                 renderItem={({ item: offset }) => (
                     <SchedulePage
                         scheduleData={scheduleData}
-                        weekOffset={offset}
-                        hours={hours}
-                        getLessonPosition={getLessonPosition}
+                        offset={offset}
                         onSelectLesson={onSelectLesson}
                     />
                 )}
@@ -122,8 +90,9 @@ export const ScheduleGrid = ({
                     }, 100);
                 }}
                 windowSize={3}
-                maxToRenderPerBatch={3}
+                maxToRenderPerBatch={2}
                 updateCellsBatchingPeriod={50}
+                initialNumToRender={1}
                 removeClippedSubviews={true}
                 bounces={false}
             />

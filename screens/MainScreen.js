@@ -5,7 +5,6 @@ import { BookOpen } from "lucide-react-native";
 import { useTheme } from "../hooks/useTheme";
 import { useGridlyStore } from "../store/useGridlyStore";
 import { fetchGroupList } from "../utils/api";
-import { useScheduleGrid } from "../hooks/useScheduleGrid";
 import { TopBar } from "../components/screens/Main/TopBar";
 import { ScheduleGrid } from "../components/screens/Main/ScheduleGrid";
 import { LessonDetailsModal } from "../components/screens/Main/Modals/LessonDetailsModal";
@@ -17,8 +16,6 @@ export default function MainScreen() {
 
     const { selectedGroup, scheduleData, isLoading, setSelectedGroup } = useGridlyStore();
     const [weekOffset, setWeekOffset] = useState(0);
-
-    const { HOURS, monthTitle, getLessonPosition } = useScheduleGrid(scheduleData, weekOffset);
 
     const [isGroupModalVisible, setIsGroupModalVisible] = useState(false);
     const [groups, setGroups] = useState([]);
@@ -50,7 +47,7 @@ export default function MainScreen() {
         <View style={styles.container}>
             <TopBar
                 selectedGroup={selectedGroup}
-                monthTitle={monthTitle}
+                weekOffset={weekOffset}
                 onOpenGroupModal={() => setIsGroupModalVisible(true)}
                 onPressCurrentDay={() => setWeekOffset(0)}
             />
@@ -80,8 +77,6 @@ export default function MainScreen() {
             ) : (
                 <ScheduleGrid
                     scheduleData={scheduleData}
-                    hours={HOURS}
-                    getLessonPosition={getLessonPosition}
                     onSelectLesson={(lesson) => setSelectedLesson(lesson)}
                     weekOffset={weekOffset}
                     onChangeWeekOffset={setWeekOffset}

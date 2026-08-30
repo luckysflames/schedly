@@ -54,7 +54,12 @@ export const WeekContent = ({ daysList, hours, weekNumber, getLessonPosition, on
         <View style={styles.container}>
             {/* Закрепленная шапка */}
             <View style={styles.fixedHeaderWrapper}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} scrollEnabled={false}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={false}
+                >
                     <View style={styles.tableHeaderContainer}>
                         <View style={styles.tableHeaderRow}>
                             <View style={styles.timeColumnHeader}>
@@ -97,9 +102,15 @@ export const WeekContent = ({ daysList, hours, weekNumber, getLessonPosition, on
             <ScrollView
                 style={styles.verticalScroll}
                 contentContainerStyle={styles.verticalScrollContent}
-                showsVerticalScrollIndicator={true}
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
             >
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                >
                     <View style={[styles.tableBody, { backgroundColor: theme.dark }]}>
                         <View style={styles.timeColumn}>
                             {/* Верхняя пустая ячейка синхронизирована с шапкой сетки */}
@@ -168,9 +179,6 @@ const createLocalStyles = (theme) =>
         },
         fixedHeaderWrapper: {
             zIndex: 10,
-            borderBottomWidth: 1,
-            borderBottomColor: theme.accentMuted,
-            backgroundColor: theme.main,
             flexShrink: 0,
         },
         verticalScroll: {
@@ -180,7 +188,7 @@ const createLocalStyles = (theme) =>
             flexGrow: 1,
         },
         tableHeaderContainer: {
-            backgroundColor: theme.main,
+            backgroundColor: theme.dark,
         },
         tableHeaderRow: {
             flexDirection: "row",
@@ -189,8 +197,6 @@ const createLocalStyles = (theme) =>
             width: 45,
             justifyContent: "center",
             alignItems: "center",
-            borderRightWidth: 1,
-            borderRightColor: theme.accentMuted,
             paddingVertical: 4,
         },
         weekNumberText: {
@@ -203,11 +209,9 @@ const createLocalStyles = (theme) =>
             paddingVertical: 6,
             alignItems: "center",
             justifyContent: "center",
-            borderRightWidth: 1,
-            borderRightColor: theme.accentMuted,
         },
         dayHeaderTitle: {
-            color: theme.accentMuted,
+            color: theme.text,
             fontSize: 11,
             fontWeight: "600",
             marginBottom: 4,
@@ -228,7 +232,7 @@ const createLocalStyles = (theme) =>
             fontWeight: "505",
         },
         activeDateText: {
-            color: theme.textDark,
+            color: theme.text,
             fontWeight: "bold",
         },
         tableBody: {
@@ -238,25 +242,25 @@ const createLocalStyles = (theme) =>
         timeColumn: {
             width: 45,
             borderRightWidth: 1,
-            borderRightColor: theme.accentMuted,
+            borderRightColor: theme.textDark,
         },
         timeRow: {
             justifyContent: "flex-start",
             alignItems: "center",
         },
         timeTextCell: {
-            color: theme.accentMuted,
+            color: theme.text,
             fontSize: 11,
         },
         dayColumnBody: {
             width: 50,
             position: "relative",
             borderRightWidth: 1,
-            borderRightColor: theme.accentMuted,
+            borderRightColor: theme.textDark,
         },
         gridLine: {
             height: 70,
             borderBottomWidth: 1,
-            borderBottomColor: theme.accentMuted,
+            borderBottomColor: theme.textDark,
         },
     });

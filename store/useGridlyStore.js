@@ -47,7 +47,11 @@ export const useGridlyStore = create(
                 set({ isLoading: true, error: null });
                 try {
                     const data = await fetchSchedule(idGroup);
-                    set({ scheduleData: data, isLoading: false });
+                    if (data) {
+                        set({ scheduleData: data, isLoading: false });
+                    } else {
+                        set({ isLoading: false });
+                    }
                 } catch (e) {
                     set({ error: e.message, isLoading: false });
                 }

@@ -1,7 +1,7 @@
 {
     "expo": {
-        "name": "Gridly",
-        "slug": "gridly",
+        "name": "Schedly",
+        "slug": "schedly",
         "version": "1.0.0",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
@@ -21,7 +21,7 @@
                 "backgroundImage": "./assets/android-icon-background.png",
                 "monochromeImage": "./assets/android-icon-monochrome.png"
             },
-            "package": "com.luckyflame.gridly"
+            "package": "com.luckyflame.schedly"
         },
         "web": {
             "favicon": "./assets/favicon.png"
