@@ -1,14 +1,14 @@
 import React from "react";
-import { TouchableOpacity, StyleSheet, View, Animated } from "react-native";
+import { TouchableOpacity, StyleSheet, Animated } from "react-native";
 import * as LucideIcons from "lucide-react-native";
 
-export const TabMenuItem = ({ onPress, isFocused, iconSet, ICON_CONTAINER_SIZE, theme }) => {
+export const TabMenuItem = ({ onPress, isFocused, iconSet, theme }) => {
     const IconComponent = iconSet || LucideIcons.Home;
     const scaleValue = React.useRef(new Animated.Value(1)).current;
 
     const onPressIn = () => {
         Animated.spring(scaleValue, {
-            toValue: 0.7,
+            toValue: 0.85,
             useNativeDriver: true,
         }).start();
     };
@@ -20,7 +20,7 @@ export const TabMenuItem = ({ onPress, isFocused, iconSet, ICON_CONTAINER_SIZE, 
         }).start();
     };
 
-    const styles = createStyles(theme, ICON_CONTAINER_SIZE);
+    const styles = createStyles(theme);
 
     return (
         <TouchableOpacity
@@ -32,38 +32,36 @@ export const TabMenuItem = ({ onPress, isFocused, iconSet, ICON_CONTAINER_SIZE, 
         >
             <Animated.View
                 style={[
-                    styles.center,
+                    styles.contentContainer,
                     {
                         transform: [{ scale: scaleValue }],
                     },
                 ]}
             >
-                {isFocused && <View style={styles.activeIndicator} />}
-
-                {/* СЛОЙ ИКОНКИ */}
-                <IconComponent size={22} color={theme.accent} strokeWidth={isFocused ? 2.5 : 2} />
+                <IconComponent
+                    size={22}
+                    color={isFocused ? theme.accent : theme.textDark}
+                    strokeWidth={isFocused ? 2.5 : 2}
+                />
             </Animated.View>
         </TouchableOpacity>
     );
 };
 
-const createStyles = (theme, containerSize) =>
+const createStyles = (theme) =>
     StyleSheet.create({
         tabItem: {
             flex: 1,
+            height: 56,
             alignItems: "center",
             justifyContent: "center",
         },
-        center: {
+        contentContainer: {
             alignItems: "center",
             justifyContent: "center",
-            aspectRatio: 1,
-            width: containerSize,
-            height: containerSize,
         },
-        activeIndicator: {
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: theme.accentMuted,
-            borderRadius: containerSize / 2,
+        label: {
+            fontSize: 11,
+            fontWeight: "500",
         },
     });

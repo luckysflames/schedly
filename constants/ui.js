@@ -1,6 +1,6 @@
-import { Home, Settings } from "lucide-react-native";
+import { Calendar, Settings } from "lucide-react-native";
 
 export const TAB_ICONS = {
-    Home: Home,
+    Home: Calendar,
     Settings: Settings,
 };

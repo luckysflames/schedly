@@ -1,6 +1,5 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { TabMenuItem } from "./TabMenuItem";
 import { useTheme } from "../../../hooks/useTheme";
@@ -8,14 +7,12 @@ import { TAB_ICONS } from "../../../constants/ui";
 
 export default function MyCustomTabBar({ state, navigation }) {
     const { theme } = useTheme();
-    const insets = useSafeAreaInsets();
 
-    const BAR_HEIGHT = 64;
-    const TOTAL_BAR_HEIGHT = BAR_HEIGHT + (insets.bottom > 0 ? insets.bottom : 10);
-    const ICON_CONTAINER_SIZE = 44;
-    const wrapperBottomOffset = insets.bottom > 0 ? insets.bottom : 20;
+    const BAR_HEIGHT = 56;
+    const bottomPadding = 0;
+    const TOTAL_BAR_HEIGHT = BAR_HEIGHT;
 
-    const styles = createStyles(theme, TOTAL_BAR_HEIGHT, wrapperBottomOffset);
+    const styles = createStyles(theme, TOTAL_BAR_HEIGHT, bottomPadding);
 
     return (
         <View style={styles.wrapper}>
@@ -49,7 +46,6 @@ export default function MyCustomTabBar({ state, navigation }) {
                             routeName={route.name}
                             isFocused={isFocused}
                             iconSet={TAB_ICONS[route.name]}
-                            ICON_CONTAINER_SIZE={ICON_CONTAINER_SIZE}
                             onPress={onPress}
                             theme={theme}
                         />
@@ -60,23 +56,22 @@ export default function MyCustomTabBar({ state, navigation }) {
     );
 }
 
-const createStyles = (theme, totalBarHeight, bottomOffset) =>
+const createStyles = (theme, totalBarHeight, bottomPadding) =>
     StyleSheet.create({
         wrapper: {
             position: "absolute",
-            right: 20,
-            left: 20,
-            bottom: bottomOffset,
+            right: 0,
+            left: 0,
+            bottom: 0,
         },
         mainContainer: {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            borderRadius: 32,
-            borderWidth: 2,
+            borderRadius: 0,
             elevation: 20,
-            backgroundColor: theme.main,
-            borderColor: theme.accent, 
+            backgroundColor: theme.dark,
             height: totalBarHeight,
+            paddingBottom: bottomPadding,
         },
     });

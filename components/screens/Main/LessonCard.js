@@ -42,9 +42,6 @@ const createLocalStyles = (theme) =>
             borderRadius: 6,
             padding: 4,
             justifyContent: "space-between",
-            borderWidth: 1,
-            borderColor: theme.accentMuted,
-            overflow: "hidden",
         },
         cardSubject: {
             color: theme.text,

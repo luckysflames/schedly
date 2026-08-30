@@ -20,7 +20,7 @@ const HOURS = [
     "22",
 ];
 
-export const useScheduleGrid = (scheduleData, weekOffset = 0) => {
+export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = []) => {
     const daysList = useMemo(() => {
         const getWeekDaysWithDates = (offset) => {
             const now = new Date();
@@ -70,14 +70,18 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0) => {
                 );
             });
 
+            // Фильтруем занятия, исключая те, чьи предметы находятся в списке скрытых
+            const filteredLessons = matchedGroup
+                ? matchedGroup.lessons.filter((lesson) => !hiddenSubjects.includes(lesson.subject))
+                : [];
+
             return {
                 ...templateDay,
-                lessons: matchedGroup ? matchedGroup.lessons : [],
+                lessons: filteredLessons,
             };
         });
-    }, [scheduleData, weekOffset]);
+    }, [scheduleData, weekOffset, hiddenSubjects]);
 
-    // Вычисление заголовка месяца/периода недели
     const monthTitle = useMemo(() => {
         if (!daysList || daysList.length === 0) return "";
 
@@ -117,7 +121,6 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0) => {
         return `${capitalize(firstMonthStr)} - ${capitalize(lastMonthStr)} ${yearStr}`;
     }, [daysList]);
 
-    // Вычисление номера недели в году по первому дню отображаемой недели
     const weekNumber = useMemo(() => {
         if (!daysList || daysList.length === 0) return 1;
         const targetDate = new Date(daysList[0].date || daysList[0].dateObj);

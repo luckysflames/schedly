@@ -14,9 +14,9 @@ export const useGridlyStore = create(
             isVibration: true,
             themeName: DEFAULT_THEME_NAME,
 
-            // Новые состояния для Gridly
-            selectedGroup: null, // { id: 72074, name: 'ИКТм-71' }
+            selectedGroup: null,
             scheduleData: null,
+            hiddenSubjects: [],
             isLoading: false,
             error: null,
 
@@ -56,6 +56,16 @@ export const useGridlyStore = create(
                     set({ error: e.message, isLoading: false });
                 }
             },
+
+            toggleSubjectHidden: (subjectName) => {
+                const { hiddenSubjects } = get();
+                const isHidden = hiddenSubjects.includes(subjectName);
+                const updated = isHidden
+                    ? hiddenSubjects.filter((s) => s !== subjectName)
+                    : [...hiddenSubjects, subjectName];
+                set({ hiddenSubjects: updated });
+            },
+            resetHiddenSubjects: () => set({ hiddenSubjects: [] }),
 
             resetFullStore: () =>
                 set({

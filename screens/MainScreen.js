@@ -9,15 +9,29 @@ import { TopBar } from "../components/screens/Main/TopBar";
 import { ScheduleGrid } from "../components/screens/Main/ScheduleGrid";
 import { LessonDetailsModal } from "../components/screens/Main/Modals/LessonDetailsModal";
 import { GroupSelectModal } from "../components/screens/Main/Modals/GroupSelectModal";
+import { SubjectsFilterModal } from "../components/screens/Main/Modals/SubjectsFilterModal";
+import { DayScheduleView } from "../components/screens/Main/DayScheduleView";
+import { MonthScheduleView } from "../components/screens/Main/MonthScheduleView";
 
 export default function MainScreen() {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
-    const { selectedGroup, scheduleData, isLoading, setSelectedGroup } = useGridlyStore();
+    const {
+        selectedGroup,
+        scheduleData,
+        isLoading,
+        setSelectedGroup,
+        hiddenSubjects,
+        toggleSubjectHidden,
+    } = useGridlyStore();
+
     const [weekOffset, setWeekOffset] = useState(0);
 
+    const [currentView, setCurrentView] = useState("week");
     const [isGroupModalVisible, setIsGroupModalVisible] = useState(false);
+    const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+
     const [groups, setGroups] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredGroups, setFilteredGroups] = useState([]);
@@ -49,6 +63,7 @@ export default function MainScreen() {
                 selectedGroup={selectedGroup}
                 weekOffset={weekOffset}
                 onOpenGroupModal={() => setIsGroupModalVisible(true)}
+                onOpenFilters={() => setIsFilterModalVisible(true)}
                 onPressCurrentDay={() => setWeekOffset(0)}
             />
 
@@ -75,12 +90,33 @@ export default function MainScreen() {
                     </TouchableOpacity>
                 </View>
             ) : (
-                <ScheduleGrid
-                    scheduleData={scheduleData}
-                    onSelectLesson={(lesson) => setSelectedLesson(lesson)}
-                    weekOffset={weekOffset}
-                    onChangeWeekOffset={setWeekOffset}
-                />
+                <>
+                    {currentView === "week" && (
+                        <ScheduleGrid
+                            scheduleData={scheduleData}
+                            hiddenSubjects={hiddenSubjects}
+                            onSelectLesson={(lesson) => setSelectedLesson(lesson)}
+                            weekOffset={weekOffset}
+                            onChangeWeekOffset={setWeekOffset}
+                        />
+                    )}
+                    {currentView === "day" && (
+                        <DayScheduleView
+                            scheduleData={scheduleData}
+                            hiddenSubjects={hiddenSubjects}
+                            onSelectLesson={(lesson) => setSelectedLesson(lesson)}
+                            weekOffset={weekOffset}
+                            onChangeWeekOffset={setWeekOffset}
+                        />
+                    )}
+                    {currentView === "month" && (
+                        <MonthScheduleView
+                            scheduleData={scheduleData}
+                            hiddenSubjects={hiddenSubjects}
+                            onSelectLesson={(lesson) => setSelectedLesson(lesson)}
+                        />
+                    )}
+                </>
             )}
 
             <LessonDetailsModal
@@ -99,6 +135,16 @@ export default function MainScreen() {
                     setIsGroupModalVisible(false);
                 }}
                 onClose={() => setIsGroupModalVisible(false)}
+            />
+
+            <SubjectsFilterModal
+                visible={isFilterModalVisible}
+                scheduleData={scheduleData}
+                hiddenSubjects={hiddenSubjects}
+                onToggleSubject={toggleSubjectHidden}
+                onClose={() => setIsFilterModalVisible(false)}
+                currentView={currentView}
+                onChangeView={setCurrentView}
             />
         </View>
     );

@@ -3,7 +3,14 @@ import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { LessonCard } from "./LessonCard";
 import { useTheme } from "../../../hooks/useTheme";
 
-export const WeekContent = ({ daysList, hours, weekNumber, getLessonPosition, onSelectLesson }) => {
+export const WeekContent = ({
+    daysList,
+    hours,
+    weekNumber,
+    getLessonPosition,
+    onSelectLesson,
+    hiddenSubjects,
+}) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
@@ -140,6 +147,14 @@ export const WeekContent = ({ daysList, hours, weekNumber, getLessonPosition, on
                                     ))}
 
                                     {lessons.map((lesson, lessonIndex) => {
+                                        // Пропускаем урок, если его название содержится в списке скрытых
+                                        if (
+                                            hiddenSubjects &&
+                                            hiddenSubjects.includes(lesson.title || lesson.name)
+                                        ) {
+                                            return null;
+                                        }
+
                                         const pos = getLessonPosition(lesson.time);
                                         const adjustedPos = {
                                             ...pos,

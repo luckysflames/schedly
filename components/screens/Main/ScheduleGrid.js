@@ -3,7 +3,13 @@ import { View, FlatList, StyleSheet, Dimensions, ActivityIndicator } from "react
 import { useTheme } from "../../../hooks/useTheme";
 import { SchedulePage } from "./SchedulePage";
 
-export const ScheduleGrid = ({ scheduleData, onSelectLesson, weekOffset, onChangeWeekOffset }) => {
+export const ScheduleGrid = ({
+    scheduleData,
+    hiddenSubjects,
+    onSelectLesson,
+    weekOffset,
+    onChangeWeekOffset,
+}) => {
     const { theme } = useTheme();
     const screenWidth = Dimensions.get("window").width;
     const flatListRef = useRef(null);
@@ -38,7 +44,10 @@ export const ScheduleGrid = ({ scheduleData, onSelectLesson, weekOffset, onChang
         if (flatListRef.current) {
             const distance = Math.abs(targetIndex - currentIndexRef.current);
 
-            if (distance > 2) {
+            // Если это не текущая и не соседняя неделя (расстояние > 1), включаем лоадер
+            const shouldShowLoader = distance > 1;
+
+            if (shouldShowLoader) {
                 setIsJumping(true);
             }
 
@@ -46,10 +55,10 @@ export const ScheduleGrid = ({ scheduleData, onSelectLesson, weekOffset, onChang
 
             flatListRef.current.scrollToIndex({
                 index: targetIndex,
-                animated: distance <= 2,
+                animated: !shouldShowLoader, // Анимируем только для соседних недель
             });
 
-            if (distance > 2) {
+            if (shouldShowLoader) {
                 const timer = setTimeout(() => setIsJumping(false), 300);
                 return () => clearTimeout(timer);
             }
@@ -74,6 +83,7 @@ export const ScheduleGrid = ({ scheduleData, onSelectLesson, weekOffset, onChang
                 renderItem={({ item: offset }) => (
                     <SchedulePage
                         scheduleData={scheduleData}
+                        hiddenSubjects={hiddenSubjects}
                         offset={offset}
                         onSelectLesson={onSelectLesson}
                     />
