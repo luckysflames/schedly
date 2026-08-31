@@ -1,8 +1,8 @@
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import { View, FlatList, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
-import { useTheme } from "../../../hooks/useTheme";
+import { useTheme } from "../../../../hooks/useTheme";
 import { SchedulePage } from "./SchedulePage";
-import { useGridlyStore } from "../../../store/useGridlyStore";
+import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 export const ScheduleGrid = ({
     scheduleData,
@@ -12,7 +12,7 @@ export const ScheduleGrid = ({
     offset,
     onChangeOffset,
 }) => {
-    const { isViewChanging } = useGridlyStore();
+    const { isViewChanging } = useSchedlyStore();
     const { theme } = useTheme();
     const screenWidth = Dimensions.get("window").width;
     const flatListRef = useRef(null);

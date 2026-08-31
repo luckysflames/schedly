@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { useTheme } from "../../../hooks/useTheme";
-import { isLessonPast } from "../../../utils/lessonFormatters";
+import { useTheme } from "../../../../hooks/useTheme";
+import { isLessonPast } from "../../../../utils/lessonFormatters";
 
 export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects }) => {
     const { theme, createStyles } = useTheme();

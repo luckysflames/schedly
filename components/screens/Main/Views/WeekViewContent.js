@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { LessonCard } from "./LessonCard";
-import { useTheme } from "../../../hooks/useTheme";
-import { isLessonPast } from "../../../utils/lessonFormatters";
+import { LessonCard } from "../LessonCard";
+import { useTheme } from "../../../../hooks/useTheme";
+import { isLessonPast } from "../../../../utils/lessonFormatters";
 
 export const WeekViewContent = ({
     daysList,
@@ -16,6 +16,30 @@ export const WeekViewContent = ({
     const styles = createStyles(createLocalStyles);
 
     const HOUR_HEIGHT = 70;
+
+    // Состояние для ежеминутного обновления времени
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        // 5 минут = 5 * 60 * 1000 = 300000 мс
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 300000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    // Расчет вертикальной позиции линии относительно всей сетки
+    const getCurrentTimeTop = () => {
+        const hoursNum = currentTime.getHours();
+        const minutes = currentTime.getMinutes();
+
+        const firstHourStr = hours[0] ? parseInt(hours[0].split(":")[0], 10) : 8;
+
+        // Добавляем 1 к количеству часов, так как в начале таблицы есть пустой timeRow высотой в 1 час
+        const totalHours = hoursNum - firstHourStr + 1 + minutes / 60;
+        return totalHours * HOUR_HEIGHT;
+    };
 
     const getShortDayName = (dayInput) => {
         if (!dayInput) return "";
@@ -120,8 +144,13 @@ export const WeekViewContent = ({
                     bounces={false}
                 >
                     <View style={[styles.tableBody, { backgroundColor: theme.dark }]}>
+                        {/* Линия текущего времени на всю ширину сетки */}
+                        <View style={[styles.currentTimeIndicator, { top: getCurrentTimeTop() }]}>
+                            <View style={styles.currentTimeDot} />
+                            <View style={styles.currentTimeLine} />
+                        </View>
+
                         <View style={styles.timeColumn}>
-                            {/* Верхняя пустая ячейка синхронизирована с шапкой сетки */}
                             <View style={[styles.timeRow, { height: HOUR_HEIGHT }]} />
                             {hours.map((hour, index) => (
                                 <View key={index} style={[styles.timeRow, { height: HOUR_HEIGHT }]}>
@@ -167,7 +196,6 @@ export const WeekViewContent = ({
                                             lesson.color ||
                                             (isLecture ? theme.main : theme.accentMuted);
 
-                                        // Проверяем, прошел ли урок, передавая дату конкретного дня недели
                                         const past = isLessonPast(
                                             lesson.time,
                                             dayItem.dateObj || dayItem.date,
@@ -262,6 +290,7 @@ const createLocalStyles = (theme) =>
         tableBody: {
             flexDirection: "row",
             backgroundColor: theme.dark,
+            position: "relative", // Важно для абсолютного позиционирования линии внутри всей таблицы
         },
         timeColumn: {
             width: 45,
@@ -286,5 +315,27 @@ const createLocalStyles = (theme) =>
             height: 70,
             borderBottomWidth: 1,
             borderBottomColor: theme.textDark,
+        },
+        // Стили для линии времени на всю сетку
+        currentTimeIndicator: {
+            position: "absolute",
+            left: 0,
+            right: 0,
+            flexDirection: "row",
+            alignItems: "center",
+            zIndex: 20,
+            marginTop: -4, // Смещаем весь блок наверх на половину высоты точки (8 / 2)
+        },
+        currentTimeDot: {
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: theme.accent,
+            marginLeft: 41, // Смещаем точку ровно на начало сетки (минуя колонку времени шириной 45)
+        },
+        currentTimeLine: {
+            flex: 1,
+            height: 2,
+            backgroundColor: theme.accentMuted,
         },
     });

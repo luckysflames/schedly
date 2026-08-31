@@ -4,7 +4,7 @@ import { sqliteZustandStorage } from "../utils/sqliteStorage";
 import { THEMES, DEFAULT_THEME_NAME } from "../theme/themes";
 import { fetchSchedule } from "../utils/api";
 
-export const useGridlyStore = create(
+export const useSchedlyStore = create(
     persist(
         (set, get) => ({
             // ==========================================
@@ -86,7 +86,7 @@ export const useGridlyStore = create(
                 }),
         }),
         {
-            name: "gridly-schedule-storage",
+            name: "schedly-schedule-storage",
             storage: createJSONStorage(() => sqliteZustandStorage),
             partialize: (state) => {
                 const { _hasHydrated, isLoading, error, isViewChanging, ...rest } = state;

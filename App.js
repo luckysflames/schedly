@@ -1,4 +1,3 @@
-// App.js
 import React, { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
@@ -20,7 +19,7 @@ const Stack = createStackNavigator();
 const HomeStack = createStackNavigator();
 // const SettingsStack = createStackNavigator();
 
-const FALLBACK_MAIN_COLOR = "#132a22";
+const FALLBACK_MAIN_COLOR = "#000000";
 
 function HomeStackNavigator() {
     return (
@@ -54,7 +53,7 @@ function HomeTabs() {
             <Tab.Screen name="Home" component={HomeStackNavigator} />
 
             {/* Временная заглушка для вкладки настроек, чтобы не ломать навигацию */}
-            <Tab.Screen name="Settings" component={HomeStackNavigator} />
+            {/* <Tab.Screen name="Settings" component={HomeStackNavigator} /> */}
         </Tab.Navigator>
     );
 }

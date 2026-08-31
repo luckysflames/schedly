@@ -171,12 +171,15 @@ export const useScheduleGrid = (
 
         if (isNaN(startH) || isNaN(endH)) return { top: 0, height: 60 };
 
-        const startHourIndex = startH - 8 + (startM || 0) / 60;
+        // Динамически определяем первый час сетки из массива HOURS
+        const firstHour = HOURS.length > 0 ? parseInt(HOURS[0], 10) : 8;
+
+        const startHourIndex = startH - firstHour + (startM || 0) / 60;
         const durationHours = endH - startH + ((endM || 0) - (startM || 0)) / 60;
 
         return {
             top: startHourIndex * HOUR_HEIGHT,
-            height: Math.max(durationHours * HOUR_HEIGHT, 55),
+            height: Math.max(durationHours * HOUR_HEIGHT, 30),
         };
     };
 

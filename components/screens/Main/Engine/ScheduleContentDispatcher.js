@@ -1,7 +1,7 @@
 import React from "react";
-import { DayViewContent } from "./DayViewContent";
-import { WeekViewContent } from "./WeekViewContent";
-import { MonthViewContent } from "./MonthViewContent";
+import { DayViewContent } from "../Views/DayViewContent";
+import { WeekViewContent } from "../Views/WeekViewContent";
+import { MonthViewContent } from "../Views/MonthViewContent";
 
 export const ScheduleContentDispatcher = (props) => {
     const { currentView } = props;

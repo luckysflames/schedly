@@ -6,6 +6,7 @@
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
+        "backgroundColor": "#000000",
         "splash": {
             "image": "./assets/splash-icon.png",
             "resizeMode": "contain",
@@ -26,6 +27,11 @@
         "web": {
             "favicon": "./assets/favicon.png"
         },
-        "owner": "luckyflame"
+        "owner": "luckyflame",
+        "extra": {
+            "eas": {
+                "projectId": "ad024185-4f2c-42bd-b6fc-9b764c510e3e"
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Dimensions } from "react-native";
-import { useScheduleGrid } from "../../../hooks/useScheduleGrid";
+import { useScheduleGrid } from "../../../../hooks/useScheduleGrid";
 import { ScheduleContentDispatcher } from "./ScheduleContentDispatcher";
 
 export const SchedulePage = React.memo(

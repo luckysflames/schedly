@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { useGridlyStore } from "../store/useGridlyStore";
+import { useSchedlyStore } from "../store/useSchedlyStore";
 import { getThemeColors } from "../theme/themes";
 
 export const useTheme = () => {
-    const themeName = useGridlyStore((state) => state.themeName);
-    const setThemeName = useGridlyStore((state) => state.setThemeName);
+    const themeName = useSchedlyStore((state) => state.themeName);
+    const setThemeName = useSchedlyStore((state) => state.setThemeName);
 
     const theme = getThemeColors(themeName);
 

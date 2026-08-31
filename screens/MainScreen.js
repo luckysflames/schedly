@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "rea
 import { BookOpen } from "lucide-react-native";
 
 import { useTheme } from "../hooks/useTheme";
-import { useGridlyStore } from "../store/useGridlyStore";
+import { useSchedlyStore } from "../store/useSchedlyStore";
 import { fetchGroupList } from "../utils/api";
 import { TopBar } from "../components/screens/Main/TopBar";
-import { ScheduleGrid } from "../components/screens/Main/ScheduleGrid";
+import { ScheduleGrid } from "../components/screens/Main/Engine/ScheduleGrid";
 import { LessonDetailsModal } from "../components/screens/Main/Modals/LessonDetailsModal";
 import { GroupSelectModal } from "../components/screens/Main/Modals/GroupSelectModal";
 import { SubjectsFilterModal } from "../components/screens/Main/Modals/SubjectsFilterModal";
@@ -24,7 +24,7 @@ export default function MainScreen() {
         toggleSubjectHidden,
         currentView,
         setCurrentView,
-    } = useGridlyStore();
+    } = useSchedlyStore();
 
     const [dayOffset, setDayOffset] = useState(0);
     const [weekOffset, setWeekOffset] = useState(0);
@@ -88,17 +88,15 @@ export default function MainScreen() {
                 </View>
             ) : !selectedGroup ? (
                 <View style={styles.center}>
-                    <BookOpen size={48} color={theme.accentMuted} />
+                    <BookOpen size={48} color={theme.accent} />
                     <Text style={styles.placeholderText}>
                         Выберите учебную группу, чтобы отобразить сетку расписания
                     </Text>
                     <TouchableOpacity
-                        style={[styles.button, { backgroundColor: theme.accent }]}
+                        style={styles.button}
                         onPress={() => setIsGroupModalVisible(true)}
                     >
-                        <Text style={[styles.buttonText, { color: theme.textDark }]}>
-                            Выбрать группу
-                        </Text>
+                        <Text style={styles.buttonText}>Выбрать группу</Text>
                     </TouchableOpacity>
                 </View>
             ) : (
@@ -151,8 +149,14 @@ const createLocalStyles = (theme) =>
             textAlign: "center",
             marginTop: 12,
             fontSize: 14,
-            color: theme.accentMuted,
+            color: theme.accent,
         },
-        button: { marginTop: 20, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
-        buttonText: { fontWeight: "600", fontSize: 16 },
+        button: {
+            marginTop: 20,
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderRadius: 12,
+            backgroundColor: theme.accent,
+        },
+        buttonText: { fontWeight: "600", fontSize: 16, color: theme.text },
     });

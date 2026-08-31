@@ -12,7 +12,7 @@ import {
 import { Check, X, LayoutGrid, Clock, Calendar, Scroll } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { normalizeScheduleData } from "../../../../utils/normalizeScheduleData";
-import { useGridlyStore } from "../../../../store/useGridlyStore";
+import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.75;
@@ -29,7 +29,7 @@ export const SubjectsFilterModal = ({
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
-    const setIsViewChanging = useGridlyStore((state) => state.setIsViewChanging);
+    const setIsViewChanging = useSchedlyStore((state) => state.setIsViewChanging);
 
     const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -81,14 +81,25 @@ export const SubjectsFilterModal = ({
 
     const allSubjects = useMemo(() => {
         if (!scheduleData) return [];
+
+        // scheduleData уже может быть нормализованным массивом дней
+        // или исходными данными (в зависимости от того, как они хранятся в сторе),
+        // поэтому используем normalizeScheduleData для надежности:
         const normalized = normalizeScheduleData(scheduleData);
-        const subjectsSet = new Set();
+        const subjectsMap = new Map();
+
         normalized.forEach((day) => {
             day.lessons.forEach((lesson) => {
-                if (lesson.subject) subjectsSet.add(lesson.subject);
+                if (lesson.subject && lesson.color && !subjectsMap.has(lesson.subject)) {
+                    // Забираем уже готовый цвет прямо из объекта урока
+                    subjectsMap.set(lesson.subject, lesson.color);
+                }
             });
         });
-        return Array.from(subjectsSet).sort();
+
+        return Array.from(subjectsMap.entries())
+            .map(([name, color]) => ({ name, color }))
+            .sort((a, b) => a.name.localeCompare(b.name));
     }, [scheduleData]);
 
     if (!visible) return null;
@@ -197,7 +208,7 @@ export const SubjectsFilterModal = ({
                             {allSubjects.length === 0 ? (
                                 <Text style={styles.emptyText}>Нет доступных предметов</Text>
                             ) : (
-                                allSubjects.map((subject) => {
+                                allSubjects.map(({ name: subject, color }) => {
                                     const isHidden = hiddenSubjects.includes(subject);
                                     return (
                                         <TouchableOpacity
@@ -209,11 +220,12 @@ export const SubjectsFilterModal = ({
                                             <View
                                                 style={[
                                                     styles.checkbox,
-                                                    !isHidden && { backgroundColor: theme.accent },
+                                                    { borderColor: color }, // Цвет рамки из объекта предмета
+                                                    !isHidden && { backgroundColor: color }, // Заливка цветом предмета, если активен
                                                 ]}
                                             >
                                                 {!isHidden && (
-                                                    <Check size={14} color={theme.textDark} />
+                                                    <Check size={14} color={theme.text} />
                                                 )}
                                             </View>
                                             <Text
@@ -331,5 +343,5 @@ const createLocalStyles = (theme) =>
             marginRight: 14,
         },
         subjectText: { fontSize: 16, color: theme.text, flex: 1, fontWeight: "500" },
-        strikethrough: { color: theme.accentMuted, textDecorationLine: "line-through" },
+        strikethrough: { opacity: 0.25, color: theme.text, textDecorationLine: "line-through" },
     });
