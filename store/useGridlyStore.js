@@ -20,16 +20,25 @@ export const useGridlyStore = create(
             isLoading: false,
             error: null,
 
+            currentView: "week",
+            isViewChanging: false,
+
             // ==========================================
             // --- ACTIONS (SYSTEM & SECURITY) ---
             // ==========================================
             setHasHydrated: (state) => set({ _hasHydrated: state }),
+
             setIsVibration: (value) => set({ isVibration: value }),
+
             setThemeName: (themeName) => {
                 if (THEMES[themeName]) {
                     set({ themeName });
                 }
             },
+
+            setCurrentView: (view) => set({ currentView: view }),
+
+            setIsViewChanging: (status) => set({ isViewChanging: status }),
 
             // ==========================================
             // --- ACTIONS (SCHEDULE & GROUPS) ---
@@ -47,11 +56,7 @@ export const useGridlyStore = create(
                 set({ isLoading: true, error: null });
                 try {
                     const data = await fetchSchedule(idGroup);
-                    if (data) {
-                        set({ scheduleData: data, isLoading: false });
-                    } else {
-                        set({ isLoading: false });
-                    }
+                    set({ scheduleData: data || null, isLoading: false });
                 } catch (e) {
                     set({ error: e.message, isLoading: false });
                 }
@@ -65,6 +70,7 @@ export const useGridlyStore = create(
                     : [...hiddenSubjects, subjectName];
                 set({ hiddenSubjects: updated });
             },
+
             resetHiddenSubjects: () => set({ hiddenSubjects: [] }),
 
             resetFullStore: () =>
@@ -73,6 +79,8 @@ export const useGridlyStore = create(
                     themeName: DEFAULT_THEME_NAME,
                     selectedGroup: null,
                     scheduleData: null,
+                    currentView: "week",
+                    isViewChanging: false,
                     isLoading: false,
                     error: null,
                 }),
@@ -81,13 +89,11 @@ export const useGridlyStore = create(
             name: "gridly-schedule-storage",
             storage: createJSONStorage(() => sqliteZustandStorage),
             partialize: (state) => {
-                // Сохраняем группу и настройки, исключая временные флаги загрузки и гидратации
-                const { _hasHydrated, isLoading, error, ...rest } = state;
+                const { _hasHydrated, isLoading, error, isViewChanging, ...rest } = state;
                 return rest;
             },
             onRehydrateStorage: () => (state) => {
                 state?.setHasHydrated(true);
-                // Если группа уже была сохранена в SQLite, автоматически подгружаем расписание при старте
                 const currentGroup = state?.selectedGroup;
                 if (currentGroup?.id) {
                     state.loadSchedule(currentGroup.id);

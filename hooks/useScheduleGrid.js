@@ -20,18 +20,34 @@ const HOURS = [
     "22",
 ];
 
-export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = []) => {
+export const useScheduleGrid = (
+    scheduleData,
+    currentView = "week",
+    offset = 0,
+    hiddenSubjects = [],
+) => {
     const daysList = useMemo(() => {
-        const getWeekDaysWithDates = (offset) => {
-            const now = new Date();
+        const now = new Date();
+        const templates = [];
+
+        if (currentView === "day") {
+            const targetDate = new Date(now);
+            targetDate.setDate(targetDate.getDate() + offset);
+            templates.push({
+                day: targetDate.toLocaleDateString("ru-RU", { weekday: "short" }).toUpperCase(),
+                fullName: targetDate.toLocaleDateString("ru-RU", { weekday: "long" }),
+                date: targetDate.toISOString(),
+                dateObj: targetDate,
+                lessons: [],
+            });
+        } else if (currentView === "week") {
             const currentDayOfWeek = now.getDay();
             const distanceToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
-
             const monday = new Date(now);
             monday.setDate(monday.getDate() + distanceToMonday + offset * 7);
             monday.setHours(0, 0, 0, 0);
 
-            const template = [
+            const weekTemplates = [
                 { day: "ПН", fullName: "Понедельник" },
                 { day: "ВТ", fullName: "Вторник" },
                 { day: "СР", fullName: "Среда" },
@@ -41,28 +57,41 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = [
                 { day: "ВС", fullName: "Воскресенье" },
             ];
 
-            return template.map((item, index) => {
+            weekTemplates.forEach((item, index) => {
                 const date = new Date(monday);
                 date.setDate(monday.getDate() + index);
-                return {
+                templates.push({
                     ...item,
                     date: date.toISOString(),
                     dateObj: date,
                     lessons: [],
-                };
+                });
             });
-        };
+        } else if (currentView === "month") {
+            const targetMonthDate = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+            const year = targetMonthDate.getFullYear();
+            const month = targetMonthDate.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        const fullWeekTemplate = getWeekDaysWithDates(weekOffset);
-        if (!scheduleData) return fullWeekTemplate;
+            for (let i = 1; i <= daysInMonth; i++) {
+                const date = new Date(year, month, i);
+                templates.push({
+                    day: date.toLocaleDateString("ru-RU", { weekday: "short" }).toUpperCase(),
+                    fullName: date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" }),
+                    date: date.toISOString(),
+                    dateObj: date,
+                    lessons: [],
+                });
+            }
+        }
 
+        if (!scheduleData) return templates;
         const rawList = normalizeScheduleData(scheduleData);
 
-        return fullWeekTemplate.map((templateDay) => {
+        return templates.map((templateDay) => {
             const matchedGroup = rawList.find((group) => {
                 const lessonDate = new Date(group.date);
                 if (isNaN(lessonDate.getTime())) return false;
-
                 return (
                     lessonDate.getDate() === templateDay.dateObj.getDate() &&
                     lessonDate.getMonth() === templateDay.dateObj.getMonth() &&
@@ -70,7 +99,6 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = [
                 );
             });
 
-            // Фильтруем занятия, исключая те, чьи предметы находятся в списке скрытых
             const filteredLessons = matchedGroup
                 ? matchedGroup.lessons.filter((lesson) => !hiddenSubjects.includes(lesson.subject))
                 : [];
@@ -80,23 +108,17 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = [
                 lessons: filteredLessons,
             };
         });
-    }, [scheduleData, weekOffset, hiddenSubjects]);
+    }, [scheduleData, currentView, offset, hiddenSubjects]);
 
     const monthTitle = useMemo(() => {
         if (!daysList || daysList.length === 0) return "";
-
         const firstDayDate = new Date(daysList[0].date || daysList[0].dateObj);
-        const lastDayDate = new Date(
-            daysList[daysList.length - 1].date || daysList[daysList.length - 1].dateObj,
-        );
-
         if (isNaN(firstDayDate.getTime())) return "";
 
         const formatterMonth = new Intl.DateTimeFormat("ru-RU", {
             month: "long",
             timeZone: "Europe/Moscow",
         });
-
         const formatterYear = new Intl.DateTimeFormat("ru-RU", {
             year: "numeric",
             timeZone: "Europe/Moscow",
@@ -104,9 +126,15 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = [
 
         const yearStr = formatterYear.format(firstDayDate);
         const firstMonthStr = formatterMonth.format(firstDayDate);
-
         const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
+        if (currentView === "day") {
+            return `${firstDayDate.getDate()} ${capitalize(firstMonthStr)} ${yearStr}`;
+        }
+
+        const lastDayDate = new Date(
+            daysList[daysList.length - 1].date || daysList[daysList.length - 1].dateObj,
+        );
         if (isNaN(lastDayDate.getTime()) || firstDayDate.getMonth() === lastDayDate.getMonth()) {
             return `${capitalize(firstMonthStr)} ${yearStr}`;
         }
@@ -117,9 +145,8 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = [
         if (yearStr !== lastYearStr) {
             return `${capitalize(firstMonthStr)} ${yearStr} - ${capitalize(lastMonthStr)} ${lastYearStr}`;
         }
-
         return `${capitalize(firstMonthStr)} - ${capitalize(lastMonthStr)} ${yearStr}`;
-    }, [daysList]);
+    }, [daysList, currentView]);
 
     const weekNumber = useMemo(() => {
         if (!daysList || daysList.length === 0) return 1;
@@ -153,11 +180,5 @@ export const useScheduleGrid = (scheduleData, weekOffset = 0, hiddenSubjects = [
         };
     };
 
-    return {
-        HOURS,
-        daysList,
-        monthTitle,
-        weekNumber,
-        getLessonPosition,
-    };
+    return { HOURS, daysList, monthTitle, weekNumber, getLessonPosition };
 };

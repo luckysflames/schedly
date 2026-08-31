@@ -2,8 +2,9 @@ import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { LessonCard } from "./LessonCard";
 import { useTheme } from "../../../hooks/useTheme";
+import { isLessonPast } from "../../../utils/lessonFormatters";
 
-export const WeekContent = ({
+export const WeekViewContent = ({
     daysList,
     hours,
     weekNumber,
@@ -147,7 +148,6 @@ export const WeekContent = ({
                                     ))}
 
                                     {lessons.map((lesson, lessonIndex) => {
-                                        // Пропускаем урок, если его название содержится в списке скрытых
                                         if (
                                             hiddenSubjects &&
                                             hiddenSubjects.includes(lesson.title || lesson.name)
@@ -167,13 +167,22 @@ export const WeekContent = ({
                                             lesson.color ||
                                             (isLecture ? theme.main : theme.accentMuted);
 
+                                        // Проверяем, прошел ли урок, передавая дату конкретного дня недели
+                                        const past = isLessonPast(
+                                            lesson.time,
+                                            dayItem.dateObj || dayItem.date,
+                                        );
+
                                         return (
                                             <LessonCard
                                                 key={lessonIndex}
                                                 lesson={lesson}
                                                 position={adjustedPos}
                                                 backgroundColor={cardBg}
-                                                onPress={() => onSelectLesson(lesson)}
+                                                isPast={past}
+                                                onPress={() =>
+                                                    onSelectLesson({ ...lesson, isPast: past })
+                                                }
                                             />
                                         );
                                     })}

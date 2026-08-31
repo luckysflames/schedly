@@ -60,7 +60,7 @@ export const normalizeScheduleData = (apiData) => {
         groupedMap[dateKey].lessons.push({
             id: item.код,
             time: `${item.начало || ""} - ${item.конец || ""}`.trim(),
-            number: `${item.номерЗанятия || ""} пара`,
+            number: item.номерЗанятия,
             type: (item.дисциплина || "").split(" ")[0],
             subject: cleanSubject,
             teacher: item.преподаватель,

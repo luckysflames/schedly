@@ -3,26 +3,11 @@ import { View, Text, StyleSheet } from "react-native";
 import { Clock, MapPin, Info, Users, GraduationCap } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { BottomSheet } from "../../../shared/Modals/BottomSheet";
+import { getLessonTypeFullName, cleanTeacherName } from "../../../../utils/lessonFormatters";
 
 export const LessonDetailsModal = ({ selectedLesson, selectedGroup, onClose }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
-
-    const getLessonTypeFullName = (typeInput) => {
-        if (!typeInput) return "Занятие";
-        const lower = String(typeInput).toLowerCase().trim();
-        if (lower.includes("лек")) return "Лекция";
-        if (lower.includes("пр")) return "Практическое занятие";
-        if (lower.includes("лаб")) return "Лабораторная работа";
-        return typeInput;
-    };
-
-    const cleanTeacherName = (teacherInput) => {
-        if (!teacherInput) return "Преподаватель не указан";
-        return teacherInput
-            .replace(/^(доц\.|проф\.|ст\.\s*преп\.|преп\.|асс\.|инж\.)\s*/gi, "")
-            .trim();
-    };
 
     const isLecture = selectedLesson?.type?.toLowerCase().includes("лек");
     const defaultBg = isLecture ? theme.main : theme.accentMuted;

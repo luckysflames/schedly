@@ -1,27 +1,29 @@
 import React from "react";
 import { View, Dimensions } from "react-native";
-import { WeekContent } from "./WeekContent";
 import { useScheduleGrid } from "../../../hooks/useScheduleGrid";
+import { ScheduleContentDispatcher } from "./ScheduleContentDispatcher";
 
 export const SchedulePage = React.memo(
-    ({ scheduleData, offset, onSelectLesson, hiddenSubjects }) => {
+    ({ scheduleData, currentView, offset, onSelectLesson, hiddenSubjects }) => {
         const screenWidth = Dimensions.get("window").width;
 
         const { HOURS, daysList, weekNumber, getLessonPosition } = useScheduleGrid(
             scheduleData,
+            currentView,
             offset,
             hiddenSubjects,
         );
 
         return (
             <View style={{ width: screenWidth, flex: 1 }}>
-                <WeekContent
+                <ScheduleContentDispatcher
                     daysList={daysList}
                     hours={HOURS}
                     weekNumber={weekNumber}
                     getLessonPosition={getLessonPosition}
                     onSelectLesson={onSelectLesson}
                     hiddenSubjects={hiddenSubjects}
+                    currentView={currentView}
                 />
             </View>
         );

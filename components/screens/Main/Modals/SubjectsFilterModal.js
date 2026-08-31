@@ -12,6 +12,7 @@ import {
 import { Check, X, LayoutGrid, Clock, Calendar, Scroll } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { normalizeScheduleData } from "../../../../utils/normalizeScheduleData";
+import { useGridlyStore } from "../../../../store/useGridlyStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.75;
@@ -27,6 +28,8 @@ export const SubjectsFilterModal = ({
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
+
+    const setIsViewChanging = useGridlyStore((state) => state.setIsViewChanging);
 
     const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -65,6 +68,17 @@ export const SubjectsFilterModal = ({
         });
     };
 
+    const handleViewChange = (newView) => {
+        onClose();
+        setIsViewChanging(true);
+        requestAnimationFrame(() => {
+            onChangeView(newView);
+            setTimeout(() => {
+                setIsViewChanging(false);
+            }, 150);
+        });
+    };
+
     const allSubjects = useMemo(() => {
         if (!scheduleData) return [];
         const normalized = normalizeScheduleData(scheduleData);
@@ -98,7 +112,6 @@ export const SubjectsFilterModal = ({
                 <Animated.View
                     style={[styles.modalContent, { transform: [{ translateX: slideAnim }] }]}
                 >
-                    {/* Лого и название приложения */}
                     <View style={styles.appHeader}>
                         <View
                             style={[styles.logoContainer, { backgroundColor: theme.accent + "22" }]}
@@ -108,17 +121,13 @@ export const SubjectsFilterModal = ({
                         <Text style={styles.appName}>Schedly</Text>
                     </View>
 
-                    {/* Вертикальное меню выбора вида */}
                     <View style={styles.viewSelectorContainer}>
                         <TouchableOpacity
                             style={[
                                 styles.viewItemRow,
                                 currentView === "day" && styles.activeViewItemRow,
                             ]}
-                            onPress={() => {
-                                onChangeView("day");
-                                onClose();
-                            }}
+                            onPress={() => handleViewChange("day")}
                             activeOpacity={0.7}
                         >
                             <Clock
@@ -140,10 +149,7 @@ export const SubjectsFilterModal = ({
                                 styles.viewItemRow,
                                 currentView === "week" && styles.activeViewItemRow,
                             ]}
-                            onPress={() => {
-                                onChangeView("week");
-                                onClose();
-                            }}
+                            onPress={() => handleViewChange("week")}
                             activeOpacity={0.7}
                         >
                             <LayoutGrid
@@ -165,10 +171,7 @@ export const SubjectsFilterModal = ({
                                 styles.viewItemRow,
                                 currentView === "month" && styles.activeViewItemRow,
                             ]}
-                            onPress={() => {
-                                onChangeView("month");
-                                onClose();
-                            }}
+                            onPress={() => handleViewChange("month")}
                             activeOpacity={0.7}
                         >
                             <Calendar
@@ -186,7 +189,6 @@ export const SubjectsFilterModal = ({
                         </TouchableOpacity>
                     </View>
 
-                    {/* Блок с предметами для фильтрации */}
                     <View style={styles.filterSection}>
                         <ScrollView
                             style={styles.listContainer}
@@ -328,6 +330,6 @@ const createLocalStyles = (theme) =>
             alignItems: "center",
             marginRight: 14,
         },
-        subjectText: { fontSize: 16, color: theme.text || "#FFFFFF", flex: 1, fontWeight: "500" },
+        subjectText: { fontSize: 16, color: theme.text, flex: 1, fontWeight: "500" },
         strikethrough: { color: theme.accentMuted, textDecorationLine: "line-through" },
     });

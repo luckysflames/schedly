@@ -2,14 +2,17 @@ import React, { useRef, useCallback, useEffect, useState } from "react";
 import { View, FlatList, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
 import { SchedulePage } from "./SchedulePage";
+import { useGridlyStore } from "../../../store/useGridlyStore";
 
 export const ScheduleGrid = ({
     scheduleData,
     hiddenSubjects,
     onSelectLesson,
-    weekOffset,
-    onChangeWeekOffset,
+    currentView,
+    offset,
+    onChangeOffset,
 }) => {
+    const { isViewChanging } = useGridlyStore();
     const { theme } = useTheme();
     const screenWidth = Dimensions.get("window").width;
     const flatListRef = useRef(null);
@@ -21,7 +24,7 @@ export const ScheduleGrid = ({
         Array.from({ length: TOTAL_PAGES }, (_, i) => i - CENTER_INDEX),
     ).current;
 
-    const currentIndexRef = useRef(CENTER_INDEX + weekOffset);
+    const currentIndexRef = useRef(CENTER_INDEX + offset);
     const [isJumping, setIsJumping] = useState(false);
 
     const handleMomentumScrollEnd = useCallback(
@@ -30,21 +33,19 @@ export const ScheduleGrid = ({
             const pageIndex = Math.round(contentOffsetX / screenWidth);
             currentIndexRef.current = pageIndex;
             setIsJumping(false);
-            const targetWeekOffset = pageIndex - CENTER_INDEX;
+            const targetOffset = pageIndex - CENTER_INDEX;
 
-            if (targetWeekOffset !== weekOffset) {
-                onChangeWeekOffset(targetWeekOffset);
+            if (targetOffset !== offset) {
+                onChangeOffset(targetOffset);
             }
         },
-        [weekOffset, screenWidth, onChangeWeekOffset],
+        [offset, screenWidth, onChangeOffset],
     );
 
     useEffect(() => {
-        const targetIndex = CENTER_INDEX + weekOffset;
+        const targetIndex = CENTER_INDEX + offset;
         if (flatListRef.current) {
             const distance = Math.abs(targetIndex - currentIndexRef.current);
-
-            // Если это не текущая и не соседняя неделя (расстояние > 1), включаем лоадер
             const shouldShowLoader = distance > 1;
 
             if (shouldShowLoader) {
@@ -55,7 +56,7 @@ export const ScheduleGrid = ({
 
             flatListRef.current.scrollToIndex({
                 index: targetIndex,
-                animated: !shouldShowLoader, // Анимируем только для соседних недель
+                animated: !shouldShowLoader,
             });
 
             if (shouldShowLoader) {
@@ -63,7 +64,7 @@ export const ScheduleGrid = ({
                 return () => clearTimeout(timer);
             }
         }
-    }, [weekOffset]);
+    }, [offset, currentView]);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.dark }]}>
@@ -73,18 +74,19 @@ export const ScheduleGrid = ({
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
-                initialScrollIndex={CENTER_INDEX + weekOffset}
+                initialScrollIndex={CENTER_INDEX + offset}
                 getItemLayout={(_, index) => ({
                     length: screenWidth,
                     offset: screenWidth * index,
                     index,
                 })}
-                keyExtractor={(item) => `week_${item}`}
-                renderItem={({ item: offset }) => (
+                keyExtractor={(item) => `${currentView}_${item}`}
+                renderItem={({ item: pageOffset }) => (
                     <SchedulePage
                         scheduleData={scheduleData}
                         hiddenSubjects={hiddenSubjects}
-                        offset={offset}
+                        currentView={currentView}
+                        offset={pageOffset}
                         onSelectLesson={onSelectLesson}
                     />
                 )}
@@ -107,7 +109,7 @@ export const ScheduleGrid = ({
                 bounces={false}
             />
 
-            {isJumping && (
+            {(isJumping || isViewChanging) && (
                 <View style={[styles.loadingOverlay, { backgroundColor: theme.dark }]}>
                     <ActivityIndicator size="large" color={theme.accent} />
                 </View>
@@ -117,10 +119,7 @@ export const ScheduleGrid = ({
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        position: "relative",
-    },
+    container: { flex: 1, position: "relative" },
     loadingOverlay: {
         ...StyleSheet.absoluteFillObject,
         justifyContent: "center",

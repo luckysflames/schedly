@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ChevronRight, Menu, SlidersHorizontal } from "lucide-react-native";
+import { Menu } from "lucide-react-native";
 import { useTheme } from "../../../hooks/useTheme";
 
 export const TopBar = ({
     selectedGroup,
-    weekOffset = 0,
+    currentView = "week",
+    offset = 0,
     onOpenGroupModal,
     onPressCurrentDay,
     onOpenFilters,
@@ -13,30 +14,46 @@ export const TopBar = ({
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
+    // Вычисляем заголовок месяца/недели/года в зависимости от режимов и смещения
     const monthTitle = useMemo(() => {
         const now = new Date();
-        const currentDayOfWeek = now.getDay();
-        const distanceToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
-
-        const monday = new Date(now);
-        monday.setDate(monday.getDate() + distanceToMonday + weekOffset * 7);
-
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-
         const formatterMonth = new Intl.DateTimeFormat("ru-RU", {
             month: "long",
             timeZone: "Europe/Moscow",
         });
-
         const formatterYear = new Intl.DateTimeFormat("ru-RU", {
             year: "numeric",
             timeZone: "Europe/Moscow",
         });
 
+        if (currentView === "day") {
+            const targetDate = new Date(now);
+            targetDate.setDate(now.getDate() + offset);
+            const monthStr = formatterMonth.format(targetDate);
+            const yearStr = formatterYear.format(targetDate);
+            return `${capitalize(monthStr)} ${yearStr}`;
+        }
+
+        if (currentView === "month") {
+            const targetDate = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+            const monthStr = formatterMonth.format(targetDate);
+            const yearStr = formatterYear.format(targetDate);
+            return `${capitalize(monthStr)} ${yearStr}`;
+        }
+
+        // Режим недели
+        const currentDayOfWeek = now.getDay();
+        const distanceToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
+        const monday = new Date(now);
+        monday.setDate(monday.getDate() + distanceToMonday + offset * 7);
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
         const yearStr = formatterYear.format(monday);
         const firstMonthStr = formatterMonth.format(monday);
-        const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
         if (monday.getMonth() === sunday.getMonth()) {
             return `${capitalize(firstMonthStr)} ${yearStr}`;
@@ -50,8 +67,9 @@ export const TopBar = ({
         }
 
         return `${capitalize(firstMonthStr)} - ${capitalize(lastMonthStr)} ${yearStr}`;
-    }, [weekOffset]);
+    }, [currentView, offset]);
 
+    // Всегда актуальное число текущего дня по Москве
     const currentDayMsk = new Intl.DateTimeFormat("ru-RU", {
         timeZone: "Europe/Moscow",
         day: "numeric",

@@ -10,8 +10,6 @@ import { ScheduleGrid } from "../components/screens/Main/ScheduleGrid";
 import { LessonDetailsModal } from "../components/screens/Main/Modals/LessonDetailsModal";
 import { GroupSelectModal } from "../components/screens/Main/Modals/GroupSelectModal";
 import { SubjectsFilterModal } from "../components/screens/Main/Modals/SubjectsFilterModal";
-import { DayScheduleView } from "../components/screens/Main/DayScheduleView";
-import { MonthScheduleView } from "../components/screens/Main/MonthScheduleView";
 
 export default function MainScreen() {
     const { theme, createStyles } = useTheme();
@@ -24,11 +22,24 @@ export default function MainScreen() {
         setSelectedGroup,
         hiddenSubjects,
         toggleSubjectHidden,
+        currentView,
+        setCurrentView,
     } = useGridlyStore();
 
+    const [dayOffset, setDayOffset] = useState(0);
     const [weekOffset, setWeekOffset] = useState(0);
+    const [monthOffset, setMonthOffset] = useState(0);
 
-    const [currentView, setCurrentView] = useState("week");
+    // Вычисляем активный офсет для текущего режима:
+    const currentOffset =
+        currentView === "day" ? dayOffset : currentView === "month" ? monthOffset : weekOffset;
+    const setCurrentOffset =
+        currentView === "day"
+            ? setDayOffset
+            : currentView === "month"
+              ? setMonthOffset
+              : setWeekOffset;
+
     const [isGroupModalVisible, setIsGroupModalVisible] = useState(false);
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
@@ -61,10 +72,11 @@ export default function MainScreen() {
         <View style={styles.container}>
             <TopBar
                 selectedGroup={selectedGroup}
-                weekOffset={weekOffset}
+                currentView={currentView}
+                offset={currentOffset}
                 onOpenGroupModal={() => setIsGroupModalVisible(true)}
                 onOpenFilters={() => setIsFilterModalVisible(true)}
-                onPressCurrentDay={() => setWeekOffset(0)}
+                onPressCurrentDay={() => setCurrentOffset(0)}
             />
 
             {isLoading ? (
@@ -90,33 +102,14 @@ export default function MainScreen() {
                     </TouchableOpacity>
                 </View>
             ) : (
-                <>
-                    {currentView === "week" && (
-                        <ScheduleGrid
-                            scheduleData={scheduleData}
-                            hiddenSubjects={hiddenSubjects}
-                            onSelectLesson={(lesson) => setSelectedLesson(lesson)}
-                            weekOffset={weekOffset}
-                            onChangeWeekOffset={setWeekOffset}
-                        />
-                    )}
-                    {currentView === "day" && (
-                        <DayScheduleView
-                            scheduleData={scheduleData}
-                            hiddenSubjects={hiddenSubjects}
-                            onSelectLesson={(lesson) => setSelectedLesson(lesson)}
-                            weekOffset={weekOffset}
-                            onChangeWeekOffset={setWeekOffset}
-                        />
-                    )}
-                    {currentView === "month" && (
-                        <MonthScheduleView
-                            scheduleData={scheduleData}
-                            hiddenSubjects={hiddenSubjects}
-                            onSelectLesson={(lesson) => setSelectedLesson(lesson)}
-                        />
-                    )}
-                </>
+                <ScheduleGrid
+                    scheduleData={scheduleData}
+                    hiddenSubjects={hiddenSubjects}
+                    onSelectLesson={(lesson) => setSelectedLesson(lesson)}
+                    currentView={currentView}
+                    offset={currentOffset}
+                    onChangeOffset={setCurrentOffset}
+                />
             )}
 
             <LessonDetailsModal
