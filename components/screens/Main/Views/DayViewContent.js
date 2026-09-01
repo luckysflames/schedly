@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, RefreshControl } from "react-native";
 import { LessonCard } from "../LessonCard";
 import { useTheme } from "../../../../hooks/useTheme";
 import { isLessonPast } from "../../../../utils/lessonFormatters";
@@ -10,10 +10,14 @@ export const DayViewContent = ({
     getLessonPosition,
     onSelectLesson,
     hiddenSubjects,
+    refreshing,
+    onRefresh,
+    theme: themeFromProps,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
     const screenWidth = Dimensions.get("window").width;
+    const displayTheme = themeFromProps || theme;
     const HOUR_HEIGHT = 70;
 
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -89,7 +93,7 @@ export const DayViewContent = ({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.weekHeader, { backgroundColor: theme.dark }]}>
+            <View style={[styles.weekHeader, { backgroundColor: displayTheme.dark }]}>
                 <View style={styles.weekDaysRow}>
                     {daysList.map((day, index) => {
                         const dayDateObj = day.dateObj ? new Date(day.dateObj) : new Date(day.date);
@@ -143,8 +147,17 @@ export const DayViewContent = ({
                 </View>
             </View>
 
-            <ScrollView style={styles.verticalScroll} showsVerticalScrollIndicator={false}>
-                <View style={[styles.tableBody, { backgroundColor: theme.dark }]}>
+            <ScrollView style={styles.verticalScroll} showsVerticalScrollIndicator={false} refreshControl={
+                    onRefresh && (
+                        <RefreshControl
+                            refreshing={refreshing || false}
+                            onRefresh={onRefresh}
+                            progressBackgroundColor={displayTheme.main}
+                            colors={[displayTheme.accentMuted, displayTheme.accent]}
+                        />
+                    )
+                }>
+                <View style={[styles.tableBody, { backgroundColor: displayTheme.dark }]}>
                     {isTodaySelected() && (
                         <View style={[styles.currentTimeIndicator, { top: getCurrentTimeTop() }]}>
                             <View style={styles.currentTimeDot} />

@@ -3,13 +3,24 @@ import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
 import { useTheme } from "../../../hooks/useTheme";
 import { getLessonTypeFullName, cleanTeacherName } from "../../../utils/lessonFormatters";
 
-export const LessonCard = ({ lesson, position, onPress, isDayView = false, isPast = false }) => {
+export const LessonCard = ({
+    lesson,
+    position,
+    onPress,
+    onLongPress,
+    isDayView = false,
+    isPast = false,
+    customSubjectColors = {},
+}) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
+    const subjectName = lesson.subject || lesson.name;
     const isLecture = lesson.type?.toLowerCase().includes("лек");
     const defaultBg = isLecture ? theme.main : theme.accentMuted;
-    const cardBg = lesson.color || defaultBg;
+
+    // Ищем цвет в сторе, либо берем из урока или дефолтный
+    const cardBg = customSubjectColors[subjectName] || lesson.color || defaultBg;
 
     const lessonTypeName = getLessonTypeFullName(lesson.type);
     const teacherName = cleanTeacherName(lesson.teacher);
@@ -18,13 +29,15 @@ export const LessonCard = ({ lesson, position, onPress, isDayView = false, isPas
         <TouchableOpacity
             activeOpacity={0.8}
             onPress={onPress}
+            onLongPress={onLongPress}
+            delayLongPress={500}
             style={[
                 styles.lessonCardGrid,
                 {
                     top: position.top,
                     height: position.height,
                     backgroundColor: cardBg,
-                    opacity: isPast ? 0.5 : 1,
+                    opacity: isPast ? 0.25 : 1,
                 },
             ]}
         >

@@ -8,6 +8,7 @@ export const ScheduleGrid = ({
     scheduleData,
     hiddenSubjects,
     onSelectLesson,
+    onLongPressLesson,
     currentView,
     offset,
     onChangeOffset,
@@ -88,6 +89,7 @@ export const ScheduleGrid = ({
                         currentView={currentView}
                         offset={pageOffset}
                         onSelectLesson={onSelectLesson}
+                        onLongPressLesson={onLongPressLesson}
                     />
                 )}
                 onMomentumScrollEnd={handleMomentumScrollEnd}

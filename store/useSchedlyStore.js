@@ -4,49 +4,40 @@ import { sqliteZustandStorage } from "../utils/sqliteStorage";
 import { THEMES, DEFAULT_THEME_NAME } from "../theme/themes";
 import { fetchSchedule } from "../utils/api";
 
+const initialState = {
+    _hasHydrated: false,
+    isVibration: true,
+    themeName: DEFAULT_THEME_NAME,
+    selectedGroup: null,
+    scheduleData: null,
+    hiddenSubjects: [],
+    isLoading: false,
+    error: null,
+    currentView: "week",
+    isViewChanging: false,
+    customSubjectColors: {},
+};
+
 export const useSchedlyStore = create(
     persist(
         (set, get) => ({
-            // ==========================================
-            // --- STATE ---
-            // ==========================================
-            _hasHydrated: false,
-            isVibration: true,
-            themeName: DEFAULT_THEME_NAME,
+            ...initialState,
 
-            selectedGroup: null,
-            scheduleData: null,
-            hiddenSubjects: [],
-            isLoading: false,
-            error: null,
-
-            currentView: "week",
-            isViewChanging: false,
-
-            // ==========================================
-            // --- ACTIONS (SYSTEM & SECURITY) ---
-            // ==========================================
-            setHasHydrated: (state) => set({ _hasHydrated: state }),
-
-            setIsVibration: (value) => set({ isVibration: value }),
+            // --- UI & System Actions ---
+            setHasHydrated: (status) => set({ _hasHydrated: status }),
+            setIsVibration: (isVibration) => set({ isVibration }),
+            setCurrentView: (currentView) => set({ currentView }),
+            setIsViewChanging: (isViewChanging) => set({ isViewChanging }),
 
             setThemeName: (themeName) => {
-                if (THEMES[themeName]) {
-                    set({ themeName });
-                }
+                if (THEMES[themeName]) set({ themeName });
             },
 
-            setCurrentView: (view) => set({ currentView: view }),
-
-            setIsViewChanging: (status) => set({ isViewChanging: status }),
-
-            // ==========================================
-            // --- ACTIONS (SCHEDULE & GROUPS) ---
-            // ==========================================
-            setSelectedGroup: (group) => {
-                set({ selectedGroup: group });
-                if (group?.id) {
-                    get().loadSchedule(group.id);
+            // --- Schedule & Groups Actions ---
+            setSelectedGroup: (selectedGroup) => {
+                set({ selectedGroup });
+                if (selectedGroup?.id) {
+                    get().loadSchedule(selectedGroup.id);
                 }
             },
 
@@ -56,34 +47,39 @@ export const useSchedlyStore = create(
                 set({ isLoading: true, error: null });
                 try {
                     const data = await fetchSchedule(idGroup);
-                    set({ scheduleData: data || null, isLoading: false });
+                    set({ scheduleData: data || get().scheduleData, isLoading: false });
                 } catch (e) {
                     set({ error: e.message, isLoading: false });
                 }
             },
 
+            // --- Subject Filters & Customization ---
             toggleSubjectHidden: (subjectName) => {
                 const { hiddenSubjects } = get();
                 const isHidden = hiddenSubjects.includes(subjectName);
                 const updated = isHidden
                     ? hiddenSubjects.filter((s) => s !== subjectName)
                     : [...hiddenSubjects, subjectName];
+
                 set({ hiddenSubjects: updated });
             },
 
             resetHiddenSubjects: () => set({ hiddenSubjects: [] }),
 
-            resetFullStore: () =>
+            setSubjectColor: (subjectName, color) => {
+                const { customSubjectColors } = get();
                 set({
-                    isVibration: true,
-                    themeName: DEFAULT_THEME_NAME,
-                    selectedGroup: null,
-                    scheduleData: null,
-                    currentView: "week",
-                    isViewChanging: false,
-                    isLoading: false,
-                    error: null,
-                }),
+                    customSubjectColors: {
+                        ...customSubjectColors,
+                        [subjectName]: color,
+                    },
+                });
+            },
+
+            resetCustomSubjectColors: () => set({ customSubjectColors: {} }),
+
+            // --- Reset ---
+            resetFullStore: () => set(initialState),
         }),
         {
             name: "schedly-schedule-storage",

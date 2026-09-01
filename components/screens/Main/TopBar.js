@@ -97,11 +97,11 @@ export const TopBar = ({
             </View>
 
             <TouchableOpacity
-                style={styles.weekBadge}
+                style={styles.todayButton}
                 onPress={onPressCurrentDay}
                 activeOpacity={0.7}
             >
-                <Text style={styles.weekBadgeText}>{currentDayMsk}</Text>
+                <Text style={styles.todayButtonText}>{currentDayMsk}</Text>
             </TouchableOpacity>
         </View>
     );
@@ -116,7 +116,7 @@ const createLocalStyles = (theme) =>
             paddingVertical: 12,
             backgroundColor: theme.dark,
         },
-        headerLeftContainer: { flexDirection: "row", gap: 5 },
+        headerLeftContainer: { flexDirection: "row", gap: 5, alignItems: "center" },
         monthRow: { flexDirection: "column" },
         monthTitle: { fontSize: 20, fontWeight: "bold", color: theme.accent },
         groupSelectButton: {
@@ -127,20 +127,20 @@ const createLocalStyles = (theme) =>
         selectedGroupNameSub: { fontSize: 12, color: theme.text },
         iconButton: {
             borderRadius: 8,
-            paddingHorizontal: 10,
-            paddingVertical: 8,
+            width: 44,
+            height: 44,
             justifyContent: "center",
             alignItems: "center",
         },
-        weekBadge: {
+        todayButton: {
             borderRadius: 8,
-            paddingHorizontal: 10,
-            paddingVertical: 8,
+            width: 44,
+            height: 44,
             marginRight: 10,
             borderWidth: 1,
             borderColor: theme.accent,
             justifyContent: "center",
             alignItems: "center",
         },
-        weekBadgeText: { color: theme.text, fontWeight: "bold", fontSize: 16 },
+        todayButtonText: { color: theme.text, fontWeight: "bold", fontSize: 16 },
     });

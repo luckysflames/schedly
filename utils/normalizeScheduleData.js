@@ -1,9 +1,8 @@
-export const normalizeScheduleData = (apiData) => {
+export const normalizeScheduleData = (apiData, customSubjectColors = {}) => {
     const raspList = Array.isArray(apiData) ? apiData : apiData?.rasp || [];
 
     if (raspList.length === 0) return [];
 
-    // Расширенная палитра уникальных цветов
     const predefinedPalette = [
         "#670099",
         "#66cc9a",
@@ -23,23 +22,24 @@ export const normalizeScheduleData = (apiData) => {
     ];
 
     const subjectColors = {};
-
-    // Шаг 1: Назначаем уникальный цвет каждому предмету по порядку
     let paletteCounter = 0;
+
     raspList.forEach((item) => {
         const rawSubject = item.дисциплина || "";
         const cleanSubject = rawSubject.replace(/^(лек|пр|лаб)\s*/i, "").trim();
 
         if (cleanSubject && !subjectColors[cleanSubject]) {
-            // Берем цвет по индексу счетчика. Если предметов больше, чем цветов,
-            // идем по кругу с помощью остатка от деления (%)
-            const colorIndex = paletteCounter % predefinedPalette.length;
-            subjectColors[cleanSubject] = predefinedPalette[colorIndex];
-            paletteCounter++;
+            // Если пользователь задал цвет вручную — приоритет ему
+            if (customSubjectColors[cleanSubject]) {
+                subjectColors[cleanSubject] = customSubjectColors[cleanSubject];
+            } else {
+                const colorIndex = paletteCounter % predefinedPalette.length;
+                subjectColors[cleanSubject] = predefinedPalette[colorIndex];
+                paletteCounter++;
+            }
         }
     });
 
-    // Шаг 2: Группируем элементы по дате и проставляем цвета
     const groupedMap = {};
 
     raspList.forEach((item) => {
@@ -56,6 +56,11 @@ export const normalizeScheduleData = (apiData) => {
         }
 
         const cleanSubject = (item.дисциплина || "").replace(/^(лек|пр|лаб)\s*/i, "").trim();
+        // Финальный выбор цвета для урока
+        const finalColor =
+            customSubjectColors[cleanSubject] ||
+            subjectColors[cleanSubject] ||
+            predefinedPalette[0];
 
         groupedMap[dateKey].lessons.push({
             id: item.код,
@@ -65,7 +70,7 @@ export const normalizeScheduleData = (apiData) => {
             subject: cleanSubject,
             teacher: item.преподаватель,
             auditory: item.аудитория,
-            color: subjectColors[cleanSubject] || predefinedPalette[0],
+            color: finalColor,
         });
     });
 

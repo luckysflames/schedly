@@ -1,11 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } from "react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { isLessonPast } from "../../../../utils/lessonFormatters";
 
-export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects }) => {
+export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects, refreshing, onRefresh, theme: themeFromProps }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
+    const displayTheme = themeFromProps || theme;
 
     const weekDays = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 
@@ -64,7 +65,16 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects }) =
                 ))}
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer}>
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer} refreshControl={
+                    onRefresh && (
+                        <RefreshControl
+                            refreshing={refreshing || false}
+                            onRefresh={onRefresh}
+                            progressBackgroundColor={displayTheme.main}
+                            colors={[displayTheme.accentMuted, displayTheme.accent]}
+                        />
+                    )
+                }>
                 {weeks.map((week, weekIndex) => (
                     <View key={weekIndex} style={styles.weekRow}>
                         {week.map((dayItem, dayIndex) => {
@@ -78,7 +88,7 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects }) =
                                         style={[
                                             styles.dateContainer,
                                             isToday && {
-                                                backgroundColor: theme.accent,
+                                                backgroundColor: displayTheme.accent,
                                                 borderRadius: 12,
                                             },
                                         ]}
@@ -86,9 +96,9 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects }) =
                                         <Text
                                             style={[
                                                 styles.dateText,
-                                                dayItem.isOtherMonth && { color: theme.textDark },
+                                                dayItem.isOtherMonth && { color: displayTheme.textDark },
                                                 isToday && {
-                                                    color: theme.text,
+                                                    color: displayTheme.text,
                                                     fontWeight: "bold",
                                                 },
                                             ]}
@@ -133,8 +143,8 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects }) =
                                                         styles.lessonBar,
                                                         {
                                                             backgroundColor:
-                                                                lesson.color || theme.accentMuted,
-                                                            opacity: past ? 0.5 : 1,
+                                                                lesson.color || displayTheme.accentMuted,
+                                                            opacity: past ? 0.25 : 1,
                                                         },
                                                     ]}
                                                     onPress={() =>

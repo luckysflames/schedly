@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Vibration } from "react-native";
 import { BookOpen } from "lucide-react-native";
 
 import { useTheme } from "../hooks/useTheme";
@@ -10,6 +10,7 @@ import { ScheduleGrid } from "../components/screens/Main/Engine/ScheduleGrid";
 import { LessonDetailsModal } from "../components/screens/Main/Modals/LessonDetailsModal";
 import { GroupSelectModal } from "../components/screens/Main/Modals/GroupSelectModal";
 import { SubjectsFilterModal } from "../components/screens/Main/Modals/SubjectsFilterModal";
+import { SubjectColorPickerModal } from "../components/screens/Main/Modals/SubjectColorPickerModal";
 
 export default function MainScreen() {
     const { theme, createStyles } = useTheme();
@@ -24,13 +25,13 @@ export default function MainScreen() {
         toggleSubjectHidden,
         currentView,
         setCurrentView,
+        setSubjectColor,
     } = useSchedlyStore();
 
     const [dayOffset, setDayOffset] = useState(0);
     const [weekOffset, setWeekOffset] = useState(0);
     const [monthOffset, setMonthOffset] = useState(0);
 
-    // Вычисляем активный офсет для текущего режима:
     const currentOffset =
         currentView === "day" ? dayOffset : currentView === "month" ? monthOffset : weekOffset;
     const setCurrentOffset =
@@ -42,6 +43,8 @@ export default function MainScreen() {
 
     const [isGroupModalVisible, setIsGroupModalVisible] = useState(false);
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+    const [isColorPickerVisible, setIsColorPickerVisible] = useState(false);
+    const [subjectForColorChange, setSubjectForColorChange] = useState(null);
 
     const [groups, setGroups] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
@@ -68,6 +71,15 @@ export default function MainScreen() {
         }
     };
 
+    const handleLongPressLesson = (lesson) => {
+        if (lesson?.subject) {
+            Vibration.vibrate([0, 30, 1, 30]);
+
+            setSubjectForColorChange(lesson.subject);
+            setIsColorPickerVisible(true);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <TopBar
@@ -83,7 +95,7 @@ export default function MainScreen() {
                 <View style={styles.center}>
                     <ActivityIndicator size="large" color={theme.accent} />
                     <Text style={[styles.placeholderText, { marginTop: 12 }]}>
-                        Загружаем сетку пар...
+                        Загружаем расписание...
                     </Text>
                 </View>
             ) : !selectedGroup ? (
@@ -104,6 +116,7 @@ export default function MainScreen() {
                     scheduleData={scheduleData}
                     hiddenSubjects={hiddenSubjects}
                     onSelectLesson={(lesson) => setSelectedLesson(lesson)}
+                    onLongPressLesson={handleLongPressLesson} // Передаем наш хендлер
                     currentView={currentView}
                     offset={currentOffset}
                     onChangeOffset={setCurrentOffset}
@@ -114,6 +127,18 @@ export default function MainScreen() {
                 selectedLesson={selectedLesson}
                 selectedGroup={selectedGroup}
                 onClose={() => setSelectedLesson(null)}
+            />
+
+            <SubjectColorPickerModal
+                visible={isColorPickerVisible}
+                subjectName={subjectForColorChange}
+                onClose={() => {
+                    setIsColorPickerVisible(false);
+                    setSubjectForColorChange(null);
+                }}
+                onSelectColor={(subject, color) => {
+                    setSubjectColor(subject, color);
+                }}
             />
 
             <GroupSelectModal
