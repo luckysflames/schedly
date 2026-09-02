@@ -83,7 +83,14 @@ export const useSchedlyStore = create(
                 set({ isLoading: true, error: null });
                 try {
                     const data = await fetchSchedule(idGroup);
-                    set({ scheduleData: data || get().scheduleData, isLoading: false });
+                    const hasData =
+                        data &&
+                        (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0);
+
+                    set({
+                        scheduleData: hasData ? data : get().scheduleData,
+                        isLoading: false,
+                    });
                 } catch (e) {
                     set({ error: e.message, isLoading: false });
                 }

@@ -13,13 +13,23 @@ import SettingsScreen from "./screens/SettingsScreen";
 
 import { useTheme } from "./hooks/useTheme";
 import ProfileScreen from "./screens/ProfileScreen";
+import PassScreen from "./screens/PassScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+const PassStack = createStackNavigator();
 const HomeStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
 const FALLBACK_MAIN_COLOR = "#000000";
+
+function PassStackNavigator() {
+    return (
+        <PassStack.Navigator screenOptions={{ headerShown: false }}>
+            <PassStack.Screen name="PassScreen" component={PassScreen} />
+        </PassStack.Navigator>
+    );
+}
 
 function HomeStackNavigator() {
     return (
@@ -41,11 +51,13 @@ function ProfileStackNavigator() {
 function HomeTabs() {
     return (
         <Tab.Navigator
+            initialRouteName="Home"
             tabBar={(props) => <MyCustomTabBar {...props} />}
             screenOptions={{
                 headerShown: false,
             }}
         >
+            <Tab.Screen name="Pass" component={PassStackNavigator} />
             <Tab.Screen name="Home" component={HomeStackNavigator} />
             <Tab.Screen name="Profile" component={ProfileStackNavigator} />
         </Tab.Navigator>
