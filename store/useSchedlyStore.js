@@ -16,12 +16,48 @@ const initialState = {
     currentView: "week",
     isViewChanging: false,
     customSubjectColors: {},
+    token: null,
+    userInfo: null,
+    isAuthLoading: false,
 };
 
 export const useSchedlyStore = create(
     persist(
         (set, get) => ({
             ...initialState,
+
+            // --- Auth ---
+            login: async (username, password, apiLoginFunc, apiUserInfoFunc) => {
+                set({ isAuthLoading: true, error: null });
+                try {
+                    const authData = await apiLoginFunc(username, password);
+                    const token = authData?.data.accessToken;
+                    const studentID = authData?.data.id;
+
+                    if (studentID !== undefined && token) {
+                        const userInfo = await apiUserInfoFunc(studentID, token);
+                        set({ token, userInfo, isAuthLoading: false });
+                        return true;
+                    }
+                    throw new Error("Не удалось получить токен или ID пользователя");
+                } catch (e) {
+                    set({ error: e.message, isAuthLoading: false });
+                    return false;
+                }
+            },
+
+            refreshUserInfo: async (apiUserInfoFunc) => {
+                const { token, userInfo } = get();
+                if (!token || !userInfo?.studentID) return;
+                try {
+                    const freshData = await apiUserInfoFunc(userInfo.studentID, token);
+                    if (freshData) set({ userInfo: freshData });
+                } catch (e) {
+                    console.error("Error refreshing user info:", e);
+                }
+            },
+
+            logout: () => set({ token: null, userInfo: null }),
 
             // --- UI & System Actions ---
             setHasHydrated: (status) => set({ _hasHydrated: status }),
@@ -85,7 +121,8 @@ export const useSchedlyStore = create(
             name: "schedly-schedule-storage",
             storage: createJSONStorage(() => sqliteZustandStorage),
             partialize: (state) => {
-                const { _hasHydrated, isLoading, error, isViewChanging, ...rest } = state;
+                const { _hasHydrated, isLoading, error, isViewChanging, isAuthLoading, ...rest } =
+                    state;
                 return rest;
             },
             onRehydrateStorage: () => (state) => {

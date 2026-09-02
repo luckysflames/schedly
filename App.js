@@ -9,15 +9,15 @@ import { createStackNavigator } from "@react-navigation/stack";
 
 import MyCustomTabBar from "./components/layout/TabBar/MyCustomTabBar";
 import MainScreen from "./screens/MainScreen";
-// import SettingsScreen from "./screens/SettingsScreen";
-// import DataManagementScreen from "./screens/DataManagmentScreen";
+import SettingsScreen from "./screens/SettingsScreen";
 
 import { useTheme } from "./hooks/useTheme";
+import ProfileScreen from "./screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 const HomeStack = createStackNavigator();
-// const SettingsStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
 const FALLBACK_MAIN_COLOR = "#000000";
 
@@ -29,17 +29,14 @@ function HomeStackNavigator() {
     );
 }
 
-/* 
-// Закомментировано до реализации экранов настроек
-function SettingsStackNavigator() {
+function ProfileStackNavigator() {
     return (
-        <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
-            <SettingsStack.Screen name="SettingsScreen" component={SettingsScreen} />
-            <SettingsStack.Screen name="DataManagement" component={DataManagementScreen} />
-        </SettingsStack.Navigator>
+        <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
+            <ProfileStack.Screen name="ProfileScreen" component={ProfileScreen} />
+            <ProfileStack.Screen name="SettingsScreen" component={SettingsScreen} />
+        </ProfileStack.Navigator>
     );
 }
-*/
 
 function HomeTabs() {
     return (
@@ -47,13 +44,10 @@ function HomeTabs() {
             tabBar={(props) => <MyCustomTabBar {...props} />}
             screenOptions={{
                 headerShown: false,
-                animation: "fade",
             }}
         >
             <Tab.Screen name="Home" component={HomeStackNavigator} />
-
-            {/* Временная заглушка для вкладки настроек, чтобы не ломать навигацию */}
-            {/* <Tab.Screen name="Settings" component={HomeStackNavigator} /> */}
+            <Tab.Screen name="Profile" component={ProfileStackNavigator} />
         </Tab.Navigator>
     );
 }

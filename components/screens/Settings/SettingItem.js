@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, View, Text, Switch, StyleSheet } from "react-native";
+import { View, Text, Switch, TouchableOpacity, StyleSheet } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 import { useTheme } from "../../../hooks/useTheme";
 
@@ -11,62 +11,74 @@ export const SettingItem = ({
     type = "link",
     onPress,
 }) => {
-    const { theme } = useTheme();
-    const styles = createStyles(theme);
+    const { theme, createStyles } = useTheme();
+    const styles = createStyles(createLocalStyles);
 
     return (
         <TouchableOpacity
-            style={styles.settingItem}
+            style={styles.card}
             onPress={onPress}
             disabled={type === "switch"}
             activeOpacity={0.7}
         >
-            <View style={styles.settingLeft}>
+            <View style={styles.leftContent}>
                 <View style={styles.iconWrapper}>
-                    {IconComponent && <IconComponent size={20} color={theme.accent} />}
+                    {IconComponent && <IconComponent size={18} color={theme.accent} />}
                 </View>
-                <Text style={styles.settingLabel}>{label}</Text>
+                <Text style={styles.label} numberOfLines={1}>
+                    {label}
+                </Text>
             </View>
 
-            {type === "switch" ? (
-                <Switch
-                    value={value}
-                    onValueChange={onValueChange}
-                    trackColor={{ false: theme.dark, true: theme.accent }}
-                    thumbColor={theme.white}
-                />
-            ) : (
-                <ChevronRight size={20} color={theme.accent} />
-            )}
+            <View style={styles.rightContent}>
+                {type === "switch" ? (
+                    <Switch
+                        value={value}
+                        onValueChange={onValueChange}
+                        trackColor={{ false: theme.dark, true: theme.accent }}
+                        thumbColor={theme.white}
+                    />
+                ) : (
+                    <ChevronRight size={18} color={theme.accent} />
+                )}
+            </View>
         </TouchableOpacity>
     );
 };
 
-const createStyles = (theme) =>
-    StyleSheet.create({
-        settingItem: {
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingVertical: 12,
-            paddingHorizontal: 16,
-        },
-        settingLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-        },
-        iconWrapper: {
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            backgroundColor: theme.accentMuted,
-            justifyContent: "center",
-            alignItems: "center",
-            marginRight: 15,
-        },
-        settingLabel: {
-            fontSize: 16,
-            fontWeight: "500",
-            color: theme.accent,
-        },
-    });
+const createLocalStyles = (theme) => ({
+    card: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: theme.main,
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        marginBottom: 10,
+    },
+    leftContent: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        flex: 1,
+        marginRight: 10,
+    },
+    iconWrapper: {
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: theme.text,
+        flex: 1,
+    },
+    rightContent: {
+        justifyContent: "center",
+        alignItems: "center",
+    },
+});

@@ -6,7 +6,15 @@ import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 import { useTheme } from "../../../../hooks/useTheme";
 
 export const SchedulePage = React.memo(
-    ({ scheduleData, currentView, offset, onSelectLesson, onLongPressLesson, hiddenSubjects }) => {
+    ({
+        scheduleData,
+        currentView,
+        offset,
+        onSelectLesson,
+        onLongPressLesson,
+        onPressWeekDay,
+        hiddenSubjects,
+    }) => {
         const screenWidth = Dimensions.get("window").width;
         const { theme } = useTheme();
         const { selectedGroup, loadSchedule } = useSchedlyStore();
@@ -37,6 +45,7 @@ export const SchedulePage = React.memo(
                     onLongPressLesson={onLongPressLesson}
                     hiddenSubjects={hiddenSubjects}
                     currentView={currentView}
+                    onPressWeekDay={onPressWeekDay}
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                     theme={theme}

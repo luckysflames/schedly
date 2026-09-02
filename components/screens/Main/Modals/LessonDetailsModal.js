@@ -4,14 +4,22 @@ import { Clock, MapPin, Info, Users, GraduationCap } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { BottomSheet } from "../../../shared/Modals/BottomSheet";
 import { getLessonTypeFullName, cleanTeacherName } from "../../../../utils/lessonFormatters";
+import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 export const LessonDetailsModal = ({ selectedLesson, selectedGroup, onClose }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
+    const customSubjectColors = useSchedlyStore((state) => state.customSubjectColors);
+
+    const subjectName = selectedLesson?.subject || selectedLesson?.name;
     const isLecture = selectedLesson?.type?.toLowerCase().includes("лек");
+
+    // Проверяем кастомный цвет для предмета в сторе, затем цвет из объекта урока, и дефолтные варианты
     const defaultBg = isLecture ? theme.main : theme.accentMuted;
-    const bulletColor = selectedLesson?.color || defaultBg;
+    const bulletColor =
+        (subjectName && customSubjectColors[subjectName]) || selectedLesson?.color || defaultBg;
+
     const lessonTypeName = getLessonTypeFullName(selectedLesson?.type);
     const lessonTeacher = cleanTeacherName(selectedLesson?.teacher);
 
@@ -25,9 +33,7 @@ export const LessonDetailsModal = ({ selectedLesson, selectedGroup, onClose }) =
         >
             <View style={styles.bottomSheetHeader}>
                 <View style={[styles.bsIconBullet, { backgroundColor: bulletColor }]} />
-                <Text style={styles.bottomSheetTitle}>
-                    {selectedLesson?.subject || selectedLesson?.name}
-                </Text>
+                <Text style={styles.bottomSheetTitle}>{subjectName}</Text>
             </View>
 
             <View style={styles.bottomSheetContent}>

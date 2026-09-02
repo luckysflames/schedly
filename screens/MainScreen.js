@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Vibration } from "react-native";
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ActivityIndicator,
+    Vibration,
+} from "react-native";
 import { BookOpen } from "lucide-react-native";
 
 import { useTheme } from "../hooks/useTheme";
@@ -26,6 +33,7 @@ export default function MainScreen() {
         currentView,
         setCurrentView,
         setSubjectColor,
+        customSubjectColors,
     } = useSchedlyStore();
 
     const [dayOffset, setDayOffset] = useState(0);
@@ -80,6 +88,15 @@ export default function MainScreen() {
         }
     };
 
+    const handleWeekDayPress = (date) => {
+        const selectedDate = new Date(date);
+        const today = new Date();
+        selectedDate.setHours(12, 0, 0, 0);
+        today.setHours(12, 0, 0, 0);
+        setDayOffset(Math.round((selectedDate - today) / 86400000));
+        setCurrentView("day");
+    };
+
     return (
         <View style={styles.container}>
             <TopBar
@@ -116,10 +133,11 @@ export default function MainScreen() {
                     scheduleData={scheduleData}
                     hiddenSubjects={hiddenSubjects}
                     onSelectLesson={(lesson) => setSelectedLesson(lesson)}
-                    onLongPressLesson={handleLongPressLesson} // Передаем наш хендлер
+                    onLongPressLesson={handleLongPressLesson}
                     currentView={currentView}
                     offset={currentOffset}
                     onChangeOffset={setCurrentOffset}
+                    onPressWeekDay={handleWeekDayPress}
                 />
             )}
 
@@ -132,6 +150,9 @@ export default function MainScreen() {
             <SubjectColorPickerModal
                 visible={isColorPickerVisible}
                 subjectName={subjectForColorChange}
+                currentColor={
+                    subjectForColorChange ? customSubjectColors[subjectForColorChange] : null
+                }
                 onClose={() => {
                     setIsColorPickerVisible(false);
                     setSubjectForColorChange(null);

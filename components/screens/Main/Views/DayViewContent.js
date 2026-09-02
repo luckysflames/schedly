@@ -3,21 +3,23 @@ import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, Refre
 import { LessonCard } from "../LessonCard";
 import { useTheme } from "../../../../hooks/useTheme";
 import { isLessonPast } from "../../../../utils/lessonFormatters";
+import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 export const DayViewContent = ({
     daysList,
     hours,
     getLessonPosition,
     onSelectLesson,
+    onLongPressLesson,
     hiddenSubjects,
     refreshing,
     onRefresh,
-    theme: themeFromProps,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
+    const customSubjectColors = useSchedlyStore((state) => state.customSubjectColors);
+    
     const screenWidth = Dimensions.get("window").width;
-    const displayTheme = themeFromProps || theme;
     const HOUR_HEIGHT = 70;
 
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -93,7 +95,7 @@ export const DayViewContent = ({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.weekHeader, { backgroundColor: displayTheme.dark }]}>
+            <View style={[styles.weekHeader, { backgroundColor: theme.dark }]}>
                 <View style={styles.weekDaysRow}>
                     {daysList.map((day, index) => {
                         const dayDateObj = day.dateObj ? new Date(day.dateObj) : new Date(day.date);
@@ -152,12 +154,12 @@ export const DayViewContent = ({
                         <RefreshControl
                             refreshing={refreshing || false}
                             onRefresh={onRefresh}
-                            progressBackgroundColor={displayTheme.main}
-                            colors={[displayTheme.accentMuted, displayTheme.accent]}
+                            progressBackgroundColor={theme.main}
+                            colors={[theme.accentMuted, theme.accent]}
                         />
                     )
                 }>
-                <View style={[styles.tableBody, { backgroundColor: displayTheme.dark }]}>
+                <View style={[styles.tableBody, { backgroundColor: theme.dark }]}>
                     {isTodaySelected() && (
                         <View style={[styles.currentTimeIndicator, { top: getCurrentTimeTop() }]}>
                             <View style={styles.currentTimeDot} />
@@ -184,7 +186,9 @@ export const DayViewContent = ({
                         {lessons.map((lesson, lessonIndex) => {
                             if (hiddenSubjects?.includes(lesson.title || lesson.name)) return null;
                             const pos = getLessonPosition(lesson.time);
-                            const cardBg = lesson.color || theme.accentMuted;
+                            const subjectName = lesson.subject || lesson.name;
+                            const cardBg =
+                                customSubjectColors[subjectName] || lesson.color || theme.accentMuted;
                             const past = isLessonPast(lesson.time, currentDayItem.dateObj);
 
                             return (
@@ -195,7 +199,9 @@ export const DayViewContent = ({
                                     backgroundColor={cardBg}
                                     isDayView={true}
                                     isPast={past}
+                                    customSubjectColors={customSubjectColors}
                                     onPress={() => onSelectLesson(lesson)}
+                                    onLongPress={() => onLongPressLesson?.(lesson)}
                                 />
                             );
                         })}

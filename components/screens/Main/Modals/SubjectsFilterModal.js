@@ -30,6 +30,7 @@ export const SubjectsFilterModal = ({
     const styles = createStyles(createLocalStyles);
 
     const setIsViewChanging = useSchedlyStore((state) => state.setIsViewChanging);
+    const customSubjectColors = useSchedlyStore((state) => state.customSubjectColors);
 
     const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -82,17 +83,22 @@ export const SubjectsFilterModal = ({
     const allSubjects = useMemo(() => {
         if (!scheduleData) return [];
 
-        // scheduleData уже может быть нормализованным массивом дней
-        // или исходными данными (в зависимости от того, как они хранятся в сторе),
-        // поэтому используем normalizeScheduleData для надежности:
         const normalized = normalizeScheduleData(scheduleData);
         const subjectsMap = new Map();
 
         normalized.forEach((day) => {
             day.lessons.forEach((lesson) => {
-                if (lesson.subject && lesson.color && !subjectsMap.has(lesson.subject)) {
-                    // Забираем уже готовый цвет прямо из объекта урока
-                    subjectsMap.set(lesson.subject, lesson.color);
+                const subjectName = lesson.subject || lesson.name;
+                if (subjectName && !subjectsMap.has(subjectName)) {
+                    const isLecture = lesson.type?.toLowerCase().includes("лек");
+
+                    // Применяем ровно ту же логику выбора цвета, что и в карточках расписания
+                    const cardBg =
+                        customSubjectColors[subjectName] ||
+                        lesson.color ||
+                        (isLecture ? theme.main : theme.accentMuted);
+
+                    subjectsMap.set(subjectName, cardBg);
                 }
             });
         });
@@ -100,7 +106,7 @@ export const SubjectsFilterModal = ({
         return Array.from(subjectsMap.entries())
             .map(([name, color]) => ({ name, color }))
             .sort((a, b) => a.name.localeCompare(b.name));
-    }, [scheduleData]);
+    }, [scheduleData, customSubjectColors, theme]);
 
     if (!visible) return null;
 
@@ -220,8 +226,8 @@ export const SubjectsFilterModal = ({
                                             <View
                                                 style={[
                                                     styles.checkbox,
-                                                    { borderColor: color }, // Цвет рамки из объекта предмета
-                                                    !isHidden && { backgroundColor: color }, // Заливка цветом предмета, если активен
+                                                    { borderColor: color },
+                                                    !isHidden && { backgroundColor: color },
                                                 ]}
                                             >
                                                 {!isHidden && (
@@ -257,7 +263,7 @@ const createLocalStyles = (theme) =>
         },
         backdropContainer: {
             ...StyleSheet.absoluteFillObject,
-            backgroundColor: theme.overlay || "rgba(0,0,0,0.6)",
+            backgroundColor: theme.overlay,
         },
         backdropTouch: {
             flex: 1,
@@ -291,13 +297,13 @@ const createLocalStyles = (theme) =>
         appName: {
             fontSize: 20,
             fontWeight: "bold",
-            color: theme.accent || "#007AFF",
+            color: theme.accent,
         },
         viewSelectorContainer: {
             marginBottom: 20,
             paddingBottom: 10,
             borderBottomWidth: 1,
-            borderBottomColor: theme.accentMuted + "22",
+            borderBottomColor: theme.accentMuted,
         },
         viewItemRow: {
             flexDirection: "row",
@@ -308,11 +314,11 @@ const createLocalStyles = (theme) =>
             gap: 14,
         },
         activeViewItemRow: {
-            backgroundColor: theme.accent + "15",
+            backgroundColor: theme.accentMuted,
         },
         viewItemText: {
             fontSize: 16,
-            color: theme.text || "#FFFFFF",
+            color: theme.text,
             fontWeight: "500",
         },
         activeViewItemText: {

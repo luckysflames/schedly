@@ -1,6 +1,6 @@
-import { Calendar, Settings } from "lucide-react-native";
+import { Calendar, CircleUserRound } from "lucide-react-native";
 
 export const TAB_ICONS = {
     Home: Calendar,
-    Settings: Settings,
+    Profile: CircleUserRound,
 };

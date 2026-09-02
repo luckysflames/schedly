@@ -1,10 +1,68 @@
 const BASE_URL = "https://edu.donstu.ru/api";
 
+/**
+ * Авторизация пользователя по логину и паролю для получения токена
+ */
+export const loginUser = async (username, password) => {
+    try {
+        const response = await fetch(`${BASE_URL}/tokenauth`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                username,
+                password,
+            }),
+        });
+
+        const json = await response.json();
+
+        // Проверяем структуру ответа. Часто токен лежит в json.data или json.data.token
+        if (json.state === 1 || json.data) {
+            return json.data;
+        }
+        throw new Error(json.message || "Ошибка авторизации");
+    } catch (error) {
+        console.error("Error during authentication:", error);
+        return null;
+    }
+};
+
+/**
+ * Получение информации о пользователе по studentID (с передачей токена)
+ */
+export const fetchUserInfo = async (studentID, token = null) => {
+    try {
+        const headers = {
+            "Content-Type": "application/json",
+        };
+
+        if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${BASE_URL}/UserInfo/Student?studentID=${studentID}`, {
+            method: "GET",
+            headers: headers,
+        });
+
+        const json = await response.json();
+
+        if (json.state === 1 || json.data) {
+            return json.data;
+        }
+        throw new Error(json.message || "Не удалось получить информацию о пользователе");
+    } catch (error) {
+        console.error("Error fetching user info:", error);
+        return null;
+    }
+};
+
 export const fetchGroupList = async (year = "2026-2027") => {
     try {
         const response = await fetch(`${BASE_URL}/raspGrouplist?year=${year}`);
         const json = await response.json();
-        // Обычно в API ДГТУ данные лежат в поле .data
         if (json.state === 1 || json.data) {
             return json.data;
         }
@@ -20,12 +78,31 @@ export const fetchSchedule = async (idGroup) => {
         const response = await fetch(`${BASE_URL}/Rasp?idGroup=${idGroup}`);
         const json = await response.json();
         if (json.state === 1 || json.data) {
-            // console.log(json.data)
-            return json.data; // Здесь содержится расписание, сетка звонков и пар
+            return json.data;
         }
         throw new Error("Не удалось получить расписание");
     } catch (error) {
         console.error("Error fetching schedule:", error);
+        return [];
+    }
+};
+
+export const fetchPassData = async (token) => {
+    try {
+        const response = await fetch(`${BASE_URL}/UserInfo/PassGeneration`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const json = await response.json();
+        if (json.state === 1) {
+            return json.data; // Вернет ту самую строку для QR (например, "856")
+        }
+        throw new Error(json.msg || "Не удалось сгенерировать пропуск");
+    } catch (error) {
+        console.error("Error fetching pass data:", error);
         return null;
     }
 };

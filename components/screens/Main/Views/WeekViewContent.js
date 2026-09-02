@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
+import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from "react-native";
 import { LessonCard } from "../LessonCard";
 import { useTheme } from "../../../../hooks/useTheme";
 import { isLessonPast } from "../../../../utils/lessonFormatters";
@@ -13,15 +13,14 @@ export const WeekViewContent = ({
     getLessonPosition,
     onSelectLesson,
     onLongPressLesson,
+    onPressWeekDay,
     hiddenSubjects,
     refreshing,
     onRefresh,
-    theme: themeFromProps,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
     const customSubjectColors = useSchedlyStore((state) => state.customSubjectColors);
-    const displayTheme = themeFromProps || theme;
 
     const HOUR_HEIGHT = 70;
     const { currentTimeTop, getShortDayName, getDayNumber, isToday } = useWeekSchedule(
@@ -47,7 +46,15 @@ export const WeekViewContent = ({
                                 const active = isToday(dayItem);
 
                                 return (
-                                    <View key={index} style={styles.dayColumnHeader}>
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={styles.dayColumnHeader}
+                                        onPress={() =>
+                                            onPressWeekDay?.(dayItem.dateObj || dayItem.date)
+                                        }
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`${dayTitle}, ${dayNum}`}
+                                    >
                                         <Text style={styles.dayHeaderTitle}>{dayTitle}</Text>
                                         <View
                                             style={[
@@ -64,7 +71,7 @@ export const WeekViewContent = ({
                                                 {dayNum}
                                             </Text>
                                         </View>
-                                    </View>
+                                    </TouchableOpacity>
                                 );
                             })}
                         </View>
@@ -83,14 +90,14 @@ export const WeekViewContent = ({
                         <RefreshControl
                             refreshing={refreshing || false}
                             onRefresh={onRefresh}
-                            progressBackgroundColor={displayTheme.main}
-                            colors={[displayTheme.accentMuted, displayTheme.accent]}
+                            progressBackgroundColor={theme.main}
+                            colors={[theme.accentMuted, theme.accent]}
                         />
                     )
                 }
             >
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} bounces={false}>
-                    <View style={[styles.tableBody, { backgroundColor: displayTheme.dark }]}>
+                    <View style={[styles.tableBody, { backgroundColor: theme.dark }]}>
                         {/* Линия текущего времени */}
                         <View style={[styles.currentTimeIndicator, { top: currentTimeTop }]}>
                             <View style={styles.currentTimeDot} />

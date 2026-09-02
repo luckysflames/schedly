@@ -28,7 +28,7 @@ export const Header = ({
                 style={[
                     styles.headerTitle,
                     !showBack && styles.headerTitleOffsetLeft,
-                    !showEdit && !showReady && !showSaved && styles.headerTitleOffsetRight,
+                    !showEdit && !showReady && styles.headerTitleOffsetRight,
                 ]}
                 numberOfLines={1}
             >
@@ -57,6 +57,8 @@ const createLocalStyles = (theme) =>
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 25,
+            paddingTop: 20,
+            paddingHorizontal: 20,
         },
         btn: {
             width: 40,

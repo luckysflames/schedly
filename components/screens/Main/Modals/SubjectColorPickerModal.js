@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
-import { Palette } from "lucide-react-native";
+import { Palette, Check } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { BottomSheet } from "../../../shared/Modals/BottomSheet";
 
@@ -42,7 +42,13 @@ const COLOR_PALETTE = [
     "#78909C",
 ];
 
-export const SubjectColorPickerModal = ({ visible, subjectName, onClose, onSelectColor }) => {
+export const SubjectColorPickerModal = ({
+    visible,
+    subjectName,
+    currentColor,
+    onClose,
+    onSelectColor,
+}) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
@@ -65,17 +71,23 @@ export const SubjectColorPickerModal = ({ visible, subjectName, onClose, onSelec
                 contentContainerStyle={styles.paletteContainer}
                 showsVerticalScrollIndicator={false}
             >
-                {COLOR_PALETTE.map((color) => (
-                    <TouchableOpacity
-                        key={color}
-                        style={[styles.colorCircle, { backgroundColor: color }]}
-                        onPress={() => {
-                            onSelectColor(subjectName, color);
-                            onClose();
-                        }}
-                        activeOpacity={0.7}
-                    />
-                ))}
+                {COLOR_PALETTE.map((color) => {
+                    const isSelected =
+                        currentColor && currentColor.toLowerCase() === color.toLowerCase();
+                    return (
+                        <TouchableOpacity
+                            key={color}
+                            style={[styles.colorCircle, { backgroundColor: color }]}
+                            onPress={() => {
+                                onSelectColor(subjectName, color);
+                                onClose();
+                            }}
+                            activeOpacity={0.7}
+                        >
+                            {isSelected && <Check size={20} color={theme.white} />}
+                        </TouchableOpacity>
+                    );
+                })}
             </ScrollView>
         </BottomSheet>
     );
@@ -113,7 +125,7 @@ const createLocalStyles = (theme) =>
             width: 40,
             height: 40,
             borderRadius: 20,
-            borderWidth: 2,
-            borderColor: "rgba(255,255,255,0.2)",
+            justifyContent: "center",
+            alignItems: "center",
         },
     });

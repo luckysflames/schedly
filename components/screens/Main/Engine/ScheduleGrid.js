@@ -12,6 +12,7 @@ export const ScheduleGrid = ({
     currentView,
     offset,
     onChangeOffset,
+    onPressWeekDay,
 }) => {
     const { isViewChanging } = useSchedlyStore();
     const { theme } = useTheme();
@@ -90,6 +91,7 @@ export const ScheduleGrid = ({
                         offset={pageOffset}
                         onSelectLesson={onSelectLesson}
                         onLongPressLesson={onLongPressLesson}
+                        onPressWeekDay={onPressWeekDay}
                     />
                 )}
                 onMomentumScrollEnd={handleMomentumScrollEnd}

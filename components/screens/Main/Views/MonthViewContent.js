@@ -3,10 +3,15 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } 
 import { useTheme } from "../../../../hooks/useTheme";
 import { isLessonPast } from "../../../../utils/lessonFormatters";
 
-export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects, refreshing, onRefresh, theme: themeFromProps }) => {
+export const MonthViewContent = ({
+    daysList,
+    onSelectLesson,
+    hiddenSubjects,
+    refreshing,
+    onRefresh,
+}) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
-    const displayTheme = themeFromProps || theme;
 
     const weekDays = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 
@@ -65,16 +70,20 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects, ref
                 ))}
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContainer} refreshControl={
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                style={styles.scrollContainer}
+                refreshControl={
                     onRefresh && (
                         <RefreshControl
                             refreshing={refreshing || false}
                             onRefresh={onRefresh}
-                            progressBackgroundColor={displayTheme.main}
-                            colors={[displayTheme.accentMuted, displayTheme.accent]}
+                            progressBackgroundColor={theme.main}
+                            colors={[theme.accentMuted, theme.accent]}
                         />
                     )
-                }>
+                }
+            >
                 {weeks.map((week, weekIndex) => (
                     <View key={weekIndex} style={styles.weekRow}>
                         {week.map((dayItem, dayIndex) => {
@@ -88,7 +97,7 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects, ref
                                         style={[
                                             styles.dateContainer,
                                             isToday && {
-                                                backgroundColor: displayTheme.accent,
+                                                backgroundColor: theme.accent,
                                                 borderRadius: 12,
                                             },
                                         ]}
@@ -96,9 +105,11 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects, ref
                                         <Text
                                             style={[
                                                 styles.dateText,
-                                                dayItem.isOtherMonth && { color: displayTheme.textDark },
+                                                dayItem.isOtherMonth && {
+                                                    color: theme.textDark,
+                                                },
                                                 isToday && {
-                                                    color: displayTheme.text,
+                                                    color: theme.text,
                                                     fontWeight: "bold",
                                                 },
                                             ]}
@@ -143,7 +154,8 @@ export const MonthViewContent = ({ daysList, onSelectLesson, hiddenSubjects, ref
                                                         styles.lessonBar,
                                                         {
                                                             backgroundColor:
-                                                                lesson.color || displayTheme.accentMuted,
+                                                                lesson.color ||
+                                                                theme.accentMuted,
                                                             opacity: past ? 0.25 : 1,
                                                         },
                                                     ]}
