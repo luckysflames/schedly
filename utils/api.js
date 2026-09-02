@@ -106,3 +106,26 @@ export const fetchPassData = async (token) => {
         return null;
     }
 };
+
+/**
+ * Получение данных студенческого билета
+ */
+export const fetchStudentCard = async (token) => {
+    try {
+        const response = await fetch(`${BASE_URL}/Students/Card`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const json = await response.json();
+        if (json.state === 1 || json.data) {
+            return json.data;
+        }
+        throw new Error(json.msg || "Не удалось получить данные студенческого билета");
+    } catch (error) {
+        console.error("Error fetching student card:", error);
+        return null;
+    }
+};

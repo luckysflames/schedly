@@ -18,6 +18,7 @@ const initialState = {
     customSubjectColors: {},
     token: null,
     userInfo: null,
+    studentCard: null,
     isAuthLoading: false,
 };
 
@@ -27,7 +28,13 @@ export const useSchedlyStore = create(
             ...initialState,
 
             // --- Auth ---
-            login: async (username, password, apiLoginFunc, apiUserInfoFunc) => {
+            login: async (
+                username,
+                password,
+                apiLoginFunc,
+                apiUserInfoFunc,
+                apiStudentCardFunc,
+            ) => {
                 set({ isAuthLoading: true, error: null });
                 try {
                     const authData = await apiLoginFunc(username, password);
@@ -36,7 +43,16 @@ export const useSchedlyStore = create(
 
                     if (studentID !== undefined && token) {
                         const userInfo = await apiUserInfoFunc(studentID, token);
-                        set({ token, userInfo, isAuthLoading: false });
+                        const cardData = apiStudentCardFunc
+                            ? await apiStudentCardFunc(token)
+                            : null;
+
+                        set({
+                            token,
+                            userInfo,
+                            studentCard: cardData?.studentCard || cardData,
+                            isAuthLoading: false,
+                        });
                         return true;
                     }
                     throw new Error("Не удалось получить токен или ID пользователя");
@@ -46,18 +62,23 @@ export const useSchedlyStore = create(
                 }
             },
 
-            refreshUserInfo: async (apiUserInfoFunc) => {
+            refreshUserInfo: async (apiUserInfoFunc, apiStudentCardFunc) => {
                 const { token, userInfo } = get();
                 if (!token || !userInfo?.studentID) return;
                 try {
                     const freshData = await apiUserInfoFunc(userInfo.studentID, token);
-                    if (freshData) set({ userInfo: freshData });
+                    const freshCard = apiStudentCardFunc ? await apiStudentCardFunc(token) : null;
+
+                    set({
+                        userInfo: freshData || userInfo,
+                        studentCard: freshCard?.studentCard || freshCard || get().studentCard,
+                    });
                 } catch (e) {
                     console.error("Error refreshing user info:", e);
                 }
             },
 
-            logout: () => set({ token: null, userInfo: null }),
+            logout: () => set({ token: null, userInfo: null, studentCard: null }),
 
             // --- UI & System Actions ---
             setHasHydrated: (status) => set({ _hasHydrated: status }),

@@ -1,5 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+    View,
+    Text,
+    StyleSheet,
+    ActivityIndicator,
+    TouchableOpacity,
+    ScrollView,
+    RefreshControl,
+} from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { QrCode, RefreshCw, Info } from "lucide-react-native";
 import { useTheme } from "../hooks/useTheme";
@@ -13,16 +21,24 @@ export default function PassScreen() {
 
     const [qrData, setQrData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState(null);
 
-    const loadPass = async () => {
+    const loadPass = async (isRefresh = false) => {
         if (!token) {
             setError("Требуется авторизация");
             setIsLoading(false);
+            setIsRefreshing(false);
             return;
         }
-        setIsLoading(true);
+
+        if (isRefresh) {
+            setIsRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
         setError(null);
+
         try {
             const data = await fetchPassData(token);
             if (data) {
@@ -34,15 +50,31 @@ export default function PassScreen() {
             setError(e.message || "Ошибка загрузки");
         } finally {
             setIsLoading(false);
+            setIsRefreshing(false);
         }
     };
+
+    const onRefresh = useCallback(() => {
+        loadPass(true);
+    }, [token]);
 
     useEffect(() => {
         loadPass();
     }, [token]);
 
     return (
-        <View style={styles.container}>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.contentContainer}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isRefreshing}
+                    onRefresh={onRefresh}
+                    progressBackgroundColor={theme.main}
+                    colors={[theme.accentMuted, theme.accent]}
+                />
+            }
+        >
             <View style={styles.infoBanner}>
                 <Info size={20} color={theme.accent} style={styles.infoIcon} />
                 <Text style={styles.infoText}>
@@ -51,7 +83,7 @@ export default function PassScreen() {
             </View>
 
             <View style={styles.card}>
-                {isLoading ? (
+                {isLoading && !isRefreshing ? (
                     <View style={styles.centerContainer}>
                         <ActivityIndicator size="large" color={theme.accent} />
                         <Text style={styles.subText}>Генерация пропуска...</Text>
@@ -59,8 +91,11 @@ export default function PassScreen() {
                 ) : error ? (
                     <View style={styles.centerContainer}>
                         <Text style={styles.errorText}>{error}</Text>
-                        <TouchableOpacity style={styles.retryButton} onPress={loadPass}>
-                            <RefreshCw size={16} color={theme.text} />
+                        <TouchableOpacity
+                            style={styles.retryButton}
+                            onPress={() => loadPass(false)}
+                        >
+                            <RefreshCw size={16} color={theme.textDark || theme.text} />
                             <Text style={styles.retryButtonText}>Повторить</Text>
                         </TouchableOpacity>
                     </View>
@@ -78,7 +113,7 @@ export default function PassScreen() {
                     </View>
                 ) : null}
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -87,6 +122,9 @@ const createLocalStyles = (theme) =>
         container: {
             flex: 1,
             backgroundColor: theme.dark,
+        },
+        contentContainer: {
+            flexGrow: 1,
             padding: 20,
         },
         infoBanner: {
@@ -164,7 +202,7 @@ const createLocalStyles = (theme) =>
             borderRadius: 12,
         },
         retryButtonText: {
-            color: theme.text,
+            color: theme.textDark,
             fontWeight: "600",
             fontSize: 14,
         },

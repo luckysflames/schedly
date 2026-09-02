@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, RefreshControl } from "react-native";
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, StyleSheet } from "react-native";
 import {
     Calendar,
     BookOpen,
@@ -9,23 +9,27 @@ import {
     Globe,
     Mail,
     Phone,
+    Award,
 } from "lucide-react-native";
 
 import { useTheme } from "../hooks/useTheme";
 import { useSchedlyStore } from "../store/useSchedlyStore";
-import { loginUser, fetchUserInfo } from "../utils/api";
+import { loginUser, fetchUserInfo, fetchStudentCard } from "../utils/api";
 import AuthView from "../components/screens/Profile/AuthView";
 import ProfileHeader from "../components/screens/Profile/ProfileHeader";
 import InfoCard from "../components/screens/Profile/InfoCard";
 import { CustomToast } from "../components/shared/Modals/CustomToast";
+import StudentCardModal from "../components/screens/Profile/Modals/StudentCardModal";
 
 export default function ProfileScreen({ navigation }) {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
-    const { token, userInfo, isAuthLoading, login, refreshUserInfo } = useSchedlyStore();
+    const { token, userInfo, studentCard, isAuthLoading, login, refreshUserInfo } =
+        useSchedlyStore();
     const [refreshing, setRefreshing] = useState(false);
-    
+    const [isCardModalVisible, setIsCardModalVisible] = useState(false);
+
     const [toastConfig, setToastConfig] = useState({ visible: false, message: "" });
 
     const showCopyToast = (label, value) => {
@@ -37,12 +41,12 @@ export default function ProfileScreen({ navigation }) {
 
     const handleLoginPress = async (email, password) => {
         if (!email || !password) return;
-        await login(email, password, loginUser, fetchUserInfo);
+        await login(email, password, loginUser, fetchUserInfo, fetchStudentCard);
     };
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await refreshUserInfo(fetchUserInfo);
+        await refreshUserInfo(fetchUserInfo, fetchStudentCard);
         setRefreshing(false);
     };
 
@@ -76,6 +80,14 @@ export default function ProfileScreen({ navigation }) {
                     userInfo={userInfo}
                     onSettingsPress={() => navigation.navigate("SettingsScreen")}
                 />
+
+                <TouchableOpacity
+                    style={styles.studentCardButton}
+                    onPress={() => setIsCardModalVisible(true)}
+                >
+                    <Award size={20} color={theme.accent} />
+                    <Text style={styles.studentCardButtonText}>Студенческий билет</Text>
+                </TouchableOpacity>
 
                 <Text style={styles.sectionTitle}>Личные данные</Text>
                 <View style={styles.gridContainer}>
@@ -150,6 +162,13 @@ export default function ProfileScreen({ navigation }) {
                 </View>
             </ScrollView>
 
+            <StudentCardModal
+                visible={isCardModalVisible}
+                onClose={() => setIsCardModalVisible(false)}
+                cardData={studentCard}
+                theme={theme}
+            />
+
             <CustomToast
                 visible={toastConfig.visible}
                 message={toastConfig.message}
@@ -160,22 +179,37 @@ export default function ProfileScreen({ navigation }) {
     );
 }
 
-const createLocalStyles = (theme) => ({
-    container: { flex: 1, backgroundColor: theme.dark },
-    contentContainer: { padding: 16, paddingBottom: 80 },
-    sectionTitle: {
-        fontSize: 13,
-        fontWeight: "700",
-        marginBottom: 10,
-        marginLeft: 6,
-        textTransform: "uppercase",
-        letterSpacing: 0.8,
-        color: theme.accent,
-    },
-    gridContainer: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 12,
-        marginBottom: 20,
-    },
-});
+const createLocalStyles = (theme) =>
+    StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.dark },
+        contentContainer: { padding: 16, paddingBottom: 80 },
+        sectionTitle: {
+            fontSize: 13,
+            fontWeight: "700",
+            marginBottom: 10,
+            marginLeft: 6,
+            textTransform: "uppercase",
+            letterSpacing: 0.8,
+            color: theme.accent,
+        },
+        gridContainer: {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 12,
+            marginBottom: 20,
+        },
+        studentCardButton: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            padding: 16,
+            borderRadius: 16,
+            marginBottom: 20,
+            backgroundColor: theme.main,
+        },
+        studentCardButtonText: {
+            fontSize: 15,
+            fontWeight: "600",
+            color: theme.text,
+        },
+    });
