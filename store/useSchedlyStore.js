@@ -102,18 +102,42 @@ export const useSchedlyStore = create(
 
             loadSchedule: async (idGroup) => {
                 set({ isLoading: true, error: null });
+                const previousData = get().scheduleData;
+
                 try {
                     const data = await fetchSchedule(idGroup);
                     const hasData =
                         data &&
                         (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0);
+                    const hasPreviousData =
+                        previousData &&
+                        (Array.isArray(previousData)
+                            ? previousData.length > 0
+                            : Object.keys(previousData).length > 0);
+
+                    if (!hasData) {
+                        set({ isLoading: false });
+                        return {
+                            status: "fallback",
+                            reason: "empty",
+                            hasLocalData: Boolean(hasPreviousData),
+                        };
+                    }
+
+                    const isUnchanged = JSON.stringify(previousData) === JSON.stringify(data);
 
                     set({
-                        scheduleData: hasData ? data : get().scheduleData,
+                        scheduleData: data,
                         isLoading: false,
                     });
+                    return { status: isUnchanged ? "unchanged" : "updated" };
                 } catch (e) {
                     set({ error: e.message, isLoading: false });
+                    return {
+                        status: "fallback",
+                        reason: e.code === "NETWORK_ERROR" ? "offline" : "unavailable",
+                        hasLocalData: Boolean(previousData),
+                    };
                 }
             },
 

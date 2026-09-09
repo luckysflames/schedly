@@ -90,7 +90,7 @@ export default function App() {
     };
 
     useEffect(() => {
-        const hideNavBar = async () => {
+        const configureNavBar = async () => {
             try {
                 await NavigationBar.setVisibilityAsync("hidden");
             } catch (e) {
@@ -98,16 +98,33 @@ export default function App() {
             }
         };
 
-        hideNavBar();
+        configureNavBar();
 
-        const subscription = AppState.addEventListener("change", (nextAppState) => {
+        let hideTimer = null;
+        const subscription = NavigationBar.addVisibilityListener(({ visibility }) => {
+            if (visibility === "visible") {
+                if (hideTimer) clearTimeout(hideTimer);
+
+                hideTimer = setTimeout(async () => {
+                    try {
+                        await NavigationBar.setVisibilityAsync("hidden");
+                    } catch (e) {
+                        console.log(e);
+                    }
+                }, 3000);
+            }
+        });
+
+        const appStateSubscription = AppState.addEventListener("change", (nextAppState) => {
             if (nextAppState === "active") {
-                hideNavBar();
+                configureNavBar();
             }
         });
 
         return () => {
             subscription.remove();
+            appStateSubscription.remove();
+            if (hideTimer) clearTimeout(hideTimer);
         };
     }, []);
 

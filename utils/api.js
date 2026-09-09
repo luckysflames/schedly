@@ -74,8 +74,20 @@ export const fetchGroupList = async (year = "2026-2027") => {
 };
 
 export const fetchSchedule = async (idGroup) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
-        const response = await fetch(`${BASE_URL}/Rasp?idGroup=${idGroup}`);
+        const response = await fetch(`${BASE_URL}/Rasp?idGroup=${idGroup}`, {
+            signal: controller.signal,
+        });
+
+        if (!response.ok) {
+            const error = new Error(`Ошибка сервера: ${response.status}`);
+            error.code = "SERVER_ERROR";
+            throw error;
+        }
+
         const json = await response.json();
         if (json.state === 1 || json.data) {
             return json.data;
@@ -83,7 +95,19 @@ export const fetchSchedule = async (idGroup) => {
         throw new Error("Не удалось получить расписание");
     } catch (error) {
         console.error("Error fetching schedule:", error);
-        return [];
+        if (error.name === "AbortError") {
+            const timeoutError = new Error("Сервер не ответил вовремя");
+            timeoutError.code = "TIMEOUT";
+            throw timeoutError;
+        }
+
+        if (error instanceof TypeError) {
+            error.code = "NETWORK_ERROR";
+        }
+
+        throw error;
+    } finally {
+        clearTimeout(timeoutId);
     }
 };
 

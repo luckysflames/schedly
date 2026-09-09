@@ -9,7 +9,7 @@ export const getLessonTypeFullName = (typeInput) => {
 
 export const cleanTeacherName = (teacherInput) => {
     if (!teacherInput) return "Преподаватель не указан";
-    return teacherInput.replace(/^(доц\.|проф\.|ст\.\s*преп\.|преп\.|асс\.|инж\.)\s*/gi, "").trim();
+    return teacherInput.replace(/^(доц\.|проф\.|ст\.\s*пр\.|преп\.|асс\.|инж\.)\s*/gi, "").trim();
 };
 
 export const isLessonPast = (lessonTime, lessonDateObj) => {

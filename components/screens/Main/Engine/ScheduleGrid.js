@@ -13,6 +13,7 @@ export const ScheduleGrid = ({
     offset,
     onChangeOffset,
     onPressWeekDay,
+    onRefreshResult,
 }) => {
     const { isViewChanging } = useSchedlyStore();
     const { theme } = useTheme();
@@ -21,13 +22,35 @@ export const ScheduleGrid = ({
 
     const TOTAL_PAGES = 201;
     const CENTER_INDEX = 100;
-
     const pagesData = useRef(
-        Array.from({ length: TOTAL_PAGES }, (_, i) => i - CENTER_INDEX),
+        Array.from({ length: TOTAL_PAGES }, (_, index) => index - CENTER_INDEX),
     ).current;
-
     const currentIndexRef = useRef(CENTER_INDEX + offset);
     const [isJumping, setIsJumping] = useState(false);
+
+    const renderPage = useCallback(
+        ({ item: pageOffset }) => (
+            <SchedulePage
+                scheduleData={scheduleData}
+                hiddenSubjects={hiddenSubjects}
+                currentView={currentView}
+                offset={pageOffset}
+                onSelectLesson={onSelectLesson}
+                onLongPressLesson={onLongPressLesson}
+                onPressWeekDay={onPressWeekDay}
+                onRefreshResult={onRefreshResult}
+            />
+        ),
+        [
+            currentView,
+            hiddenSubjects,
+            onLongPressLesson,
+            onPressWeekDay,
+            onSelectLesson,
+            onRefreshResult,
+            scheduleData,
+        ],
+    );
 
     const handleMomentumScrollEnd = useCallback(
         (event) => {
@@ -41,7 +64,7 @@ export const ScheduleGrid = ({
                 onChangeOffset(targetOffset);
             }
         },
-        [offset, screenWidth, onChangeOffset],
+        [offset, onChangeOffset, screenWidth],
     );
 
     useEffect(() => {
@@ -55,7 +78,6 @@ export const ScheduleGrid = ({
             }
 
             currentIndexRef.current = targetIndex;
-
             flatListRef.current.scrollToIndex({
                 index: targetIndex,
                 animated: !shouldShowLoader,
@@ -66,7 +88,7 @@ export const ScheduleGrid = ({
                 return () => clearTimeout(timer);
             }
         }
-    }, [offset, currentView]);
+    }, [offset]);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.dark }]}>
@@ -83,17 +105,7 @@ export const ScheduleGrid = ({
                     index,
                 })}
                 keyExtractor={(item) => `${currentView}_${item}`}
-                renderItem={({ item: pageOffset }) => (
-                    <SchedulePage
-                        scheduleData={scheduleData}
-                        hiddenSubjects={hiddenSubjects}
-                        currentView={currentView}
-                        offset={pageOffset}
-                        onSelectLesson={onSelectLesson}
-                        onLongPressLesson={onLongPressLesson}
-                        onPressWeekDay={onPressWeekDay}
-                    />
-                )}
+                renderItem={renderPage}
                 onMomentumScrollEnd={handleMomentumScrollEnd}
                 onScrollBeginDrag={() => setIsJumping(false)}
                 onScrollToIndexFailed={(info) => {

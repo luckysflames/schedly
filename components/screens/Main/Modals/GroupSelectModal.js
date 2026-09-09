@@ -41,29 +41,33 @@ export const GroupSelectModal = ({
                 style={[
                     styles.modalContainer,
                     {
-                        backgroundColor: theme.main,
                         paddingTop: Math.max(insets.top, 16),
                         paddingBottom: Math.max(insets.bottom, 16),
                     },
                 ]}
             >
                 <View style={styles.modalHeader}>
-                    <Text style={[styles.modalTitle, { color: theme.white }]}>Выбор группы</Text>
+                    <Text style={styles.modalTitle}>Выбор группы</Text>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <X size={24} color={theme.accent} />
                     </TouchableOpacity>
                 </View>
 
-                <View style={[styles.searchBox, { backgroundColor: theme.dark }]}>
+                <View style={styles.searchBox}>
                     <Search size={20} color={theme.accent} />
                     <TextInput
-                        style={[styles.searchInput, { color: theme.white }]}
-                        placeholder="Например, ИКТм-71"
+                        style={styles.searchInput}
+                        placeholder="Например, МПИ11"
                         placeholderTextColor={theme.accentMuted}
                         value={searchQuery}
                         onChangeText={onSearch}
                         autoFocus={true}
                     />
+                    {searchQuery ? (
+                        <TouchableOpacity onPress={() => onSearch("")} style={styles.clearButton}>
+                            <X size={18} color={theme.accent} />
+                        </TouchableOpacity>
+                    ) : null}
                 </View>
 
                 <FlatList
@@ -73,15 +77,13 @@ export const GroupSelectModal = ({
                     contentContainerStyle={styles.listContent}
                     renderItem={({ item }) => (
                         <TouchableOpacity
-                            style={[styles.groupItem, { borderBottomColor: theme.dark }]}
+                            style={styles.groupItem}
                             onPress={() => {
                                 Keyboard.dismiss();
                                 onSelectGroup(item);
                             }}
                         >
-                            <Text style={[styles.groupItemText, { color: theme.white }]}>
-                                {item.name || item.title}
-                            </Text>
+                            <Text style={styles.groupItemText}>{item.name || item.title}</Text>
                         </TouchableOpacity>
                     )}
                 />
@@ -95,6 +97,7 @@ const createLocalStyles = (theme) =>
         modalContainer: {
             flex: 1,
             paddingHorizontal: 20,
+            backgroundColor: theme.main,
         },
         modalHeader: {
             flexDirection: "row",
@@ -106,6 +109,7 @@ const createLocalStyles = (theme) =>
         modalTitle: {
             fontSize: 22,
             fontWeight: "bold",
+            color: theme.white,
         },
         closeButton: {
             padding: 4,
@@ -118,10 +122,15 @@ const createLocalStyles = (theme) =>
             borderRadius: 12,
             marginBottom: 16,
             gap: 10,
+            backgroundColor: theme.dark,
         },
         searchInput: {
             flex: 1,
             fontSize: 16,
+            color: theme.white,
+        },
+        clearButton: {
+            padding: 4,
         },
         listContent: {
             paddingBottom: 20,
@@ -129,8 +138,10 @@ const createLocalStyles = (theme) =>
         groupItem: {
             paddingVertical: 16,
             borderBottomWidth: 1,
+            borderBottomColor: theme.dark,
         },
         groupItemText: {
             fontSize: 16,
+            color: theme.white,
         },
     });

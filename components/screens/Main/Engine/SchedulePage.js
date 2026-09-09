@@ -14,6 +14,7 @@ export const SchedulePage = React.memo(
         onLongPressLesson,
         onPressWeekDay,
         hiddenSubjects,
+        onRefreshResult,
     }) => {
         const screenWidth = Dimensions.get("window").width;
         const { theme } = useTheme();
@@ -23,9 +24,10 @@ export const SchedulePage = React.memo(
         const onRefresh = useCallback(async () => {
             if (!selectedGroup?.id) return;
             setRefreshing(true);
-            await loadSchedule(selectedGroup.id);
+            const result = await loadSchedule(selectedGroup.id);
             setRefreshing(false);
-        }, [selectedGroup, loadSchedule]);
+            onRefreshResult?.(result);
+        }, [selectedGroup, loadSchedule, onRefreshResult]);
 
         const { HOURS, daysList, weekNumber, getLessonPosition } = useScheduleGrid(
             scheduleData,

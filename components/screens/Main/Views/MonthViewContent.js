@@ -2,16 +2,20 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } from "react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { isLessonPast } from "../../../../utils/lessonFormatters";
+import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 export const MonthViewContent = ({
     daysList,
     onSelectLesson,
+    onPressWeekDay,
     hiddenSubjects,
     refreshing,
     onRefresh,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
+
+    const customSubjectColors = useSchedlyStore((state) => state.customSubjectColors);
 
     const weekDays = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС"];
 
@@ -93,7 +97,7 @@ export const MonthViewContent = ({
 
                             return (
                                 <View key={dayIndex} style={styles.dayCell}>
-                                    <View
+                                    <TouchableOpacity
                                         style={[
                                             styles.dateContainer,
                                             isToday && {
@@ -101,6 +105,12 @@ export const MonthViewContent = ({
                                                 borderRadius: 12,
                                             },
                                         ]}
+                                        onPress={() =>
+                                            onPressWeekDay?.(dayItem.dateObj || dayItem.date)
+                                        }
+                                        activeOpacity={0.8}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`Перейти к ${dayItem.dateObj.toLocaleDateString("ru-RU")}`}
                                     >
                                         <Text
                                             style={[
@@ -116,10 +126,9 @@ export const MonthViewContent = ({
                                         >
                                             {dayItem.dateObj.getDate()}
                                         </Text>
-                                    </View>
+                                    </TouchableOpacity>
 
                                     <View style={styles.lessonsContainer}>
-                                        {/* Генерация фиксированных 7 слотов для пар от 1 до 7 */}
                                         {Array.from({ length: 7 }).map((_, slotIndex) => {
                                             const targetNumber = slotIndex + 1;
                                             const lesson = lessons.find(
@@ -135,7 +144,7 @@ export const MonthViewContent = ({
                                                 );
                                             }
 
-                                            const title = lesson.subject;
+                                            const title = lesson.subject || lesson.name;
                                             if (hiddenSubjects?.includes(title)) {
                                                 return (
                                                     <View
@@ -147,15 +156,18 @@ export const MonthViewContent = ({
 
                                             const past = isLessonPast(lesson.time, dayItem.dateObj);
 
+                                            const lessonBg =
+                                                customSubjectColors[title] ||
+                                                lesson.color ||
+                                                theme.accentMuted;
+
                                             return (
                                                 <TouchableOpacity
                                                     key={lesson.id || slotIndex}
                                                     style={[
                                                         styles.lessonBar,
                                                         {
-                                                            backgroundColor:
-                                                                lesson.color ||
-                                                                theme.accentMuted,
+                                                            backgroundColor: lessonBg,
                                                             opacity: past ? 0.25 : 1,
                                                         },
                                                     ]}
