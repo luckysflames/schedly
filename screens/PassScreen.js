@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
     View,
     Text,
@@ -9,7 +9,7 @@ import {
     RefreshControl,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
-import { QrCode, RefreshCw, Info } from "lucide-react-native";
+import { RefreshCw, Info } from "lucide-react-native";
 import { useTheme } from "../hooks/useTheme";
 import { useSchedlyStore } from "../store/useSchedlyStore";
 import { fetchPassData } from "../utils/api";
@@ -23,44 +23,61 @@ export default function PassScreen() {
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState(null);
+    const activeRequestRef = useRef(null);
 
-    const loadPass = async (isRefresh = false) => {
-        if (!token) {
-            setError("Требуется авторизация");
-            setIsLoading(false);
-            setIsRefreshing(false);
-            return;
-        }
+    const loadPass = useCallback(
+        async (isRefresh = false) => {
+            if (activeRequestRef.current) return activeRequestRef.current;
 
-        if (isRefresh) {
-            setIsRefreshing(true);
-        } else {
-            setIsLoading(true);
-        }
-        setError(null);
+            const request = (async () => {
+                if (!token) {
+                    setError("Требуется авторизация");
+                    setIsLoading(false);
+                    setIsRefreshing(false);
+                    return;
+                }
 
-        try {
-            const data = await fetchPassData(token);
-            if (data) {
-                setQrData(String(data));
-            } else {
-                setError("Не удалось получить данные пропуска");
+                if (isRefresh) {
+                    setIsRefreshing(true);
+                } else {
+                    setIsLoading(true);
+                }
+                setError(null);
+
+                try {
+                    const data = await fetchPassData(token);
+                    if (data) {
+                        setQrData(String(data));
+                    } else {
+                        setError("Не удалось получить данные пропуска");
+                    }
+                } catch (e) {
+                    setError(e.message || "Ошибка загрузки");
+                } finally {
+                    setIsLoading(false);
+                    setIsRefreshing(false);
+                }
+            })();
+
+            activeRequestRef.current = request;
+            try {
+                await request;
+            } finally {
+                if (activeRequestRef.current === request) {
+                    activeRequestRef.current = null;
+                }
             }
-        } catch (e) {
-            setError(e.message || "Ошибка загрузки");
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
-        }
-    };
+        },
+        [token],
+    );
 
     const onRefresh = useCallback(() => {
         loadPass(true);
-    }, [token]);
+    }, [loadPass]);
 
     useEffect(() => {
         loadPass();
-    }, [token]);
+    }, [loadPass]);
 
     return (
         <ScrollView

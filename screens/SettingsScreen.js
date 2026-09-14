@@ -18,6 +18,7 @@ export default function SettingsScreen({ navigation }) {
     const styles = createStyles(createLocalStyles);
 
     const logout = useSchedlyStore((state) => state.logout);
+    const token = useSchedlyStore((state) => state.token);
 
     const [isDevModalVisible, setDevModalVisible] = useState(false);
     const [isThemeModalVisible, setThemeModalVisible] = useState(false);
@@ -25,6 +26,14 @@ export default function SettingsScreen({ navigation }) {
     const handleReportBug = () => {
         const { recipient, subject, body } = getBugReportTemplate();
         Linking.openURL(`mailto:${recipient}?subject=${subject}&body=${encodeURIComponent(body)}`);
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "ProfileScreen" }],
+        });
     };
 
     return (
@@ -51,10 +60,16 @@ export default function SettingsScreen({ navigation }) {
                     onPress={() => setDevModalVisible(true)}
                 />
 
-                <TouchableOpacity style={styles.logoutButton} onPress={logout} activeOpacity={0.7}>
-                    <LogOut size={18} color={theme.red} />
-                    <Text style={styles.logoutButtonText}>Выйти из аккаунта</Text>
-                </TouchableOpacity>
+                {token && (
+                    <TouchableOpacity
+                        style={styles.logoutButton}
+                        onPress={handleLogout}
+                        activeOpacity={0.7}
+                    >
+                        <LogOut size={18} color={theme.red} />
+                        <Text style={styles.logoutButtonText}>Выйти из аккаунта</Text>
+                    </TouchableOpacity>
+                )}
 
                 <View style={styles.versionFooter}>
                     <Text style={styles.versionText}>Schedly v{version}</Text>

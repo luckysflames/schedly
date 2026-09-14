@@ -2,7 +2,10 @@ import React from "react";
 import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from "react-native";
 import { LessonCard } from "../LessonCard";
 import { useTheme } from "../../../../hooks/useTheme";
-import { isLessonPast } from "../../../../utils/lessonFormatters";
+import {
+    getConcurrentLessonLayout,
+    isLessonPast,
+} from "../../../../utils/lessonFormatters";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 import { useWeekSchedule } from "../../../../hooks/useWeekSchedule";
 
@@ -139,7 +142,11 @@ export const WeekViewContent = ({
                                         }
 
                                         const pos = getLessonPosition(lesson.time);
-                                        const adjustedPos = { ...pos, top: pos.top + HOUR_HEIGHT };
+                                        const adjustedPos = {
+                                            ...pos,
+                                            ...getConcurrentLessonLayout(lessons, lessonIndex),
+                                            top: pos.top + HOUR_HEIGHT,
+                                        };
                                         const isLecture = lesson.type
                                             ?.toLowerCase()
                                             .includes("лек");

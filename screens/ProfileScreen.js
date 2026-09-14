@@ -10,6 +10,7 @@ import {
     Mail,
     Phone,
     Award,
+    Settings,
 } from "lucide-react-native";
 
 import { useTheme } from "../hooks/useTheme";
@@ -52,12 +53,23 @@ export default function ProfileScreen({ navigation }) {
 
     if (!token || !userInfo) {
         return (
-            <AuthView
-                theme={theme}
-                styles={styles}
-                onLogin={handleLoginPress}
-                isLoading={isAuthLoading}
-            />
+            <View style={{ flex: 1, backgroundColor: theme.dark }}>
+                <View style={styles.guestHeader}>
+                    <TouchableOpacity
+                        style={styles.settingsButton}
+                        onPress={() => navigation.navigate("SettingsScreen")}
+                        activeOpacity={0.7}
+                    >
+                        <Settings size={22} color={theme.accent} />
+                    </TouchableOpacity>
+                </View>
+                <AuthView
+                    theme={theme}
+                    styles={styles}
+                    onLogin={handleLoginPress}
+                    isLoading={isAuthLoading}
+                />
+            </View>
         );
     }
 
@@ -211,5 +223,16 @@ const createLocalStyles = (theme) =>
             fontSize: 15,
             fontWeight: "600",
             color: theme.text,
+        },
+        guestHeader: {
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            paddingHorizontal: 16,
+            paddingTop: 20,
+        },
+        settingsButton: {
+            padding: 10,
+            backgroundColor: theme.main,
+            borderRadius: 12,
         },
     });

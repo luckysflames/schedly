@@ -131,11 +131,11 @@ export const MonthViewContent = ({
                                     <View style={styles.lessonsContainer}>
                                         {Array.from({ length: 7 }).map((_, slotIndex) => {
                                             const targetNumber = slotIndex + 1;
-                                            const lesson = lessons.find(
+                                            const slotLessons = lessons.filter(
                                                 (l) => l.number === targetNumber,
                                             );
 
-                                            if (!lesson) {
+                                            if (slotLessons.length === 0) {
                                                 return (
                                                     <View
                                                         key={`empty-${slotIndex}`}
@@ -144,8 +144,12 @@ export const MonthViewContent = ({
                                                 );
                                             }
 
-                                            const title = lesson.subject || lesson.name;
-                                            if (hiddenSubjects?.includes(title)) {
+                                            const visibleLessons = slotLessons.filter((lesson) => {
+                                                const title = lesson.subject || lesson.name;
+                                                return !hiddenSubjects?.includes(title);
+                                            });
+
+                                            if (visibleLessons.length === 0) {
                                                 return (
                                                     <View
                                                         key={`empty-${slotIndex}`}
@@ -153,36 +157,48 @@ export const MonthViewContent = ({
                                                     />
                                                 );
                                             }
-
-                                            const past = isLessonPast(lesson.time, dayItem.dateObj);
-
-                                            const lessonBg =
-                                                customSubjectColors[title] ||
-                                                lesson.color ||
-                                                theme.accentMuted;
 
                                             return (
-                                                <TouchableOpacity
-                                                    key={lesson.id || slotIndex}
-                                                    style={[
-                                                        styles.lessonBar,
-                                                        {
-                                                            backgroundColor: lessonBg,
-                                                            opacity: past ? 0.25 : 1,
-                                                        },
-                                                    ]}
-                                                    onPress={() =>
-                                                        onSelectLesson({ ...lesson, isPast: past })
-                                                    }
-                                                    activeOpacity={0.8}
-                                                >
-                                                    <Text
-                                                        style={styles.lessonBarText}
-                                                        numberOfLines={1}
-                                                    >
-                                                        {lesson.auditory || "—"}
-                                                    </Text>
-                                                </TouchableOpacity>
+                                                <View key={`slot-${slotIndex}`} style={styles.lessonSlot}>
+                                                    {visibleLessons.map((lesson, lessonIndex) => {
+                                                        const title = lesson.subject || lesson.name;
+                                                        const past = isLessonPast(
+                                                            lesson.time,
+                                                            dayItem.dateObj,
+                                                        );
+                                                        const lessonBg =
+                                                            customSubjectColors[title] ||
+                                                            lesson.color ||
+                                                            theme.accentMuted;
+
+                                                        return (
+                                                            <TouchableOpacity
+                                                                key={lesson.id || `${slotIndex}-${lessonIndex}`}
+                                                                style={[
+                                                                    styles.lessonBar,
+                                                                    {
+                                                                        backgroundColor: lessonBg,
+                                                                        opacity: past ? 0.25 : 1,
+                                                                    },
+                                                                ]}
+                                                                onPress={() =>
+                                                                    onSelectLesson({
+                                                                        ...lesson,
+                                                                        isPast: past,
+                                                                    })
+                                                                }
+                                                                activeOpacity={0.8}
+                                                            >
+                                                                <Text
+                                                                    style={styles.lessonBarText}
+                                                                    numberOfLines={1}
+                                                                >
+                                                                    {lesson.auditory || "—"}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        );
+                                                    })}
+                                                </View>
                                             );
                                         })}
                                     </View>
@@ -245,16 +261,23 @@ const createLocalStyles = (theme) =>
             width: "100%",
             gap: 1.5,
         },
+        lessonSlot: {
+            width: "100%",
+            height: 11,
+            flexDirection: "row",
+        },
         lessonPlaceholder: {
             height: 11,
             borderRadius: 2,
         },
         lessonBar: {
+            flex: 1,
             height: 11,
             borderRadius: 2,
             justifyContent: "center",
             alignItems: "center",
             paddingHorizontal: 1,
+            marginHorizontal: 1,
         },
         lessonBarText: {
             color: "#fff",

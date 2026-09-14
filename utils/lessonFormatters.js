@@ -3,13 +3,15 @@ export const getLessonTypeFullName = (typeInput) => {
     const lower = String(typeInput).toLowerCase().trim();
     if (lower.includes("лек")) return "Лекция";
     if (lower.includes("пр")) return "Практическое занятие";
-    if (lower.includes("лаб")) return "Лабораторная работа";
+    if (lower.includes("лаб")) return "Лабораторная работа"; // скорее всего надо будет добавить экзамен, зачёт и тд
     return typeInput;
 };
 
 export const cleanTeacherName = (teacherInput) => {
     if (!teacherInput) return "Преподаватель не указан";
-    return teacherInput.replace(/^(доц\.|проф\.|ст\.\s*пр\.|преп\.|асс\.|инж\.)\s*/gi, "").trim();
+    return teacherInput
+        .replace(/^(дек\.|зав\.\s*к\.|доц\.|проф\.|ст\.\s*пр\.|преп\.|асс\.|инж\.)\s*/gi, "")
+        .trim();
 };
 
 export const isLessonPast = (lessonTime, lessonDateObj) => {
@@ -27,4 +29,20 @@ export const isLessonPast = (lessonTime, lessonDateObj) => {
 
     const now = new Date();
     return now > lessonEnd;
+};
+
+export const getConcurrentLessonLayout = (lessons, lessonIndex) => {
+    const lesson = lessons[lessonIndex];
+    const sameTimeLessons = lessons.filter((item) => item.time === lesson?.time);
+
+    if (!lesson?.time || sameTimeLessons.length < 2) return {};
+
+    const slotIndex = sameTimeLessons.findIndex((item) => item === lesson);
+    const slotWidth = 100 / sameTimeLessons.length;
+
+    return {
+        left: `${slotIndex * slotWidth}%`,
+        right: `${(sameTimeLessons.length - slotIndex - 1) * slotWidth}%`,
+        marginHorizontal: 1,
+    };
 };

@@ -28,6 +28,7 @@
     "expo-localization": "~55.0.8",
     "expo-navigation-bar": "~55.0.8",
     "expo-screen-orientation": "~55.0.8",
+    "expo-secure-store": "~55.0.18",
     "expo-sharing": "~55.0.18",
     "expo-status-bar": "~55.0.4",
     "expo-updates": "~55.0.12",

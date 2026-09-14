@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity, RefreshControl } from "react-native";
 import { LessonCard } from "../LessonCard";
 import { useTheme } from "../../../../hooks/useTheme";
-import { isLessonPast } from "../../../../utils/lessonFormatters";
+import {
+    getConcurrentLessonLayout,
+    isLessonPast,
+} from "../../../../utils/lessonFormatters";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 export const DayViewContent = ({
@@ -186,6 +189,7 @@ export const DayViewContent = ({
                         {lessons.map((lesson, lessonIndex) => {
                             if (hiddenSubjects?.includes(lesson.title || lesson.name)) return null;
                             const pos = getLessonPosition(lesson.time);
+                            const layout = getConcurrentLessonLayout(lessons, lessonIndex);
                             const subjectName = lesson.subject || lesson.name;
                             const cardBg =
                                 customSubjectColors[subjectName] || lesson.color || theme.accentMuted;
@@ -195,7 +199,7 @@ export const DayViewContent = ({
                                 <LessonCard
                                     key={lessonIndex}
                                     lesson={lesson}
-                                    position={pos}
+                                    position={{ ...pos, ...layout }}
                                     backgroundColor={cardBg}
                                     isDayView={true}
                                     isPast={past}

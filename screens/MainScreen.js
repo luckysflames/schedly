@@ -19,6 +19,7 @@ export default function MainScreen() {
 
     const {
         selectedGroup,
+        favoriteGroups,
         scheduleData,
         isLoading,
         currentView,
@@ -33,6 +34,7 @@ export default function MainScreen() {
         hiddenSubjects,
         setCurrentOffset,
         setSelectedGroup,
+        toggleFavoriteGroup,
         toggleSubjectHidden,
         setCurrentView,
         setSubjectColor,
@@ -134,12 +136,14 @@ export default function MainScreen() {
             <GroupSelectModal
                 visible={modals.group}
                 groups={groups}
+                favoriteGroups={favoriteGroups}
                 searchQuery={searchQuery}
                 onSearch={handleSearch}
                 onSelectGroup={(item) => {
                     setSelectedGroup(item);
                     toggleModal("group", false);
                 }}
+                onToggleFavorite={toggleFavoriteGroup}
                 onClose={() => toggleModal("group", false)}
             />
 

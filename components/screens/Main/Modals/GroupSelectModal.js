@@ -10,20 +10,29 @@ import {
     Keyboard,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Search, X } from "lucide-react-native";
+import { Search, Star, X } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 
 export const GroupSelectModal = ({
     visible,
     groups,
+    favoriteGroups,
     searchQuery,
     onSearch,
     onSelectGroup,
+    onToggleFavorite,
     onClose,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
     const insets = useSafeAreaInsets();
+
+    const isFavorite = (group) =>
+        favoriteGroups.some(
+            (favoriteGroup) =>
+                String(favoriteGroup.id ?? favoriteGroup.name ?? favoriteGroup.title) ===
+                String(group.id ?? group.name ?? group.title),
+        );
 
     const handleClose = () => {
         Keyboard.dismiss();
@@ -84,6 +93,22 @@ export const GroupSelectModal = ({
                             }}
                         >
                             <Text style={styles.groupItemText}>{item.name || item.title}</Text>
+                            <TouchableOpacity
+                                style={styles.favoriteButton}
+                                onPress={() => onToggleFavorite(item)}
+                                accessibilityRole="button"
+                                accessibilityLabel={
+                                    isFavorite(item)
+                                        ? "Убрать группу из избранного"
+                                        : "Добавить группу в избранное"
+                                }
+                            >
+                                <Star
+                                    size={21}
+                                    color={theme.accent}
+                                    fill={isFavorite(item) ? theme.accent : "transparent"}
+                                />
+                            </TouchableOpacity>
                         </TouchableOpacity>
                     )}
                 />
@@ -136,12 +161,20 @@ const createLocalStyles = (theme) =>
             paddingBottom: 20,
         },
         groupItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
             paddingVertical: 16,
             borderBottomWidth: 1,
             borderBottomColor: theme.dark,
         },
         groupItemText: {
+            flex: 1,
             fontSize: 16,
             color: theme.white,
+        },
+        favoriteButton: {
+            padding: 6,
+            marginLeft: 12,
         },
     });

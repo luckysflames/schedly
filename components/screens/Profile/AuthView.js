@@ -70,7 +70,7 @@ const createLocalStyles = (theme) =>
             justifyContent: "center",
             alignItems: "center",
             backgroundColor: theme.dark,
-            marginBottom: 250,
+            marginBottom: 300,
             padding: 20,
         },
         authCard: {

@@ -36,6 +36,9 @@ export const LessonCard = ({
                 {
                     top: position.top,
                     height: position.height,
+                    left: position.left ?? 2,
+                    right: position.right ?? 2,
+                    marginHorizontal: position.marginHorizontal,
                     backgroundColor: cardBg,
                     opacity: isPast ? 0.25 : 1,
                 },

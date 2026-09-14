@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Vibration } from "react-native";
 import { useSchedlyStore } from "../store/useSchedlyStore";
 import { fetchGroupList } from "../utils/api";
@@ -6,9 +6,11 @@ import { fetchGroupList } from "../utils/api";
 export const useMainScreen = () => {
     const {
         selectedGroup,
+        favoriteGroups,
         scheduleData,
         isLoading,
         setSelectedGroup,
+        toggleFavoriteGroup,
         hiddenSubjects,
         toggleSubjectHidden,
         currentView,
@@ -46,31 +48,50 @@ export const useMainScreen = () => {
     // Локальные данные
     const [groups, setGroups] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [filteredGroups, setFilteredGroups] = useState([]);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [refreshResult, setRefreshResult] = useState(null);
     const [subjectForColorChange, setSubjectForColorChange] = useState(null);
+
+    const getGroupKey = (group) => group.id ?? group.name ?? group.title;
+
+    const visibleGroups = useMemo(() => {
+        const favoriteKeys = new Set(favoriteGroups.map((group) => String(getGroupKey(group))));
+        const groupsByKey = new Map();
+
+        favoriteGroups.forEach((group) => groupsByKey.set(String(getGroupKey(group)), group));
+        groups.forEach((group) => {
+            const key = String(getGroupKey(group));
+            if (!groupsByKey.has(key)) groupsByKey.set(key, group);
+        });
+
+        const normalizedQuery = searchQuery.toLowerCase();
+        const matchingFavorites = [];
+        const matchingGroups = [];
+
+        groupsByKey.forEach((group) => {
+            if (!(group.name || group.title || "").toLowerCase().includes(normalizedQuery)) return;
+
+            if (favoriteKeys.has(String(getGroupKey(group)))) {
+                matchingFavorites.push(group);
+            } else {
+                matchingGroups.push(group);
+            }
+        });
+
+        return [...matchingFavorites, ...matchingGroups];
+    }, [favoriteGroups, groups, searchQuery]);
 
     // Загрузка списка групп
     useEffect(() => {
         fetchGroupList().then((data) => {
             const list = Array.isArray(data) ? data : data?.groups || [];
             setGroups(list);
-            setFilteredGroups(list);
         });
     }, []);
 
     // Обработчик поиска
     const handleSearch = (text) => {
         setSearchQuery(text);
-        if (!text) {
-            setFilteredGroups(groups);
-        } else {
-            const filtered = groups.filter((g) =>
-                (g.name || g.title || "").toLowerCase().includes(text.toLowerCase()),
-            );
-            setFilteredGroups(filtered);
-        }
     };
 
     // Длинный тап по уроку (вызов пикера цвета)
@@ -116,12 +137,13 @@ export const useMainScreen = () => {
     return {
         // Стейты
         selectedGroup,
+        favoriteGroups,
         scheduleData,
         isLoading,
         currentView,
         currentOffset,
         modals,
-        groups: filteredGroups,
+        groups: visibleGroups,
         searchQuery,
         selectedLesson,
         refreshResult,
@@ -132,6 +154,7 @@ export const useMainScreen = () => {
         // Сеттеры и методы
         setCurrentOffset,
         setSelectedGroup,
+        toggleFavoriteGroup,
         toggleSubjectHidden,
         setCurrentView,
         setSubjectColor,
