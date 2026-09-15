@@ -10,7 +10,7 @@ import {
     Keyboard,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Search, Star, X } from "lucide-react-native";
+import { ArrowLeft, GitCompare, Search, Star, X } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 
 export const GroupSelectModal = ({
@@ -22,6 +22,10 @@ export const GroupSelectModal = ({
     onSelectGroup,
     onToggleFavorite,
     onClose,
+    canCompare = false,
+    comparisonMode = false,
+    onCompare,
+    title = "Выбор группы",
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
@@ -56,11 +60,30 @@ export const GroupSelectModal = ({
                 ]}
             >
                 <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>Выбор группы</Text>
+                    <Text style={styles.modalTitle}>{title}</Text>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <X size={24} color={theme.accent} />
                     </TouchableOpacity>
                 </View>
+
+                {canCompare && (
+                    <TouchableOpacity
+                        style={styles.compareButton}
+                        onPress={onCompare}
+                        activeOpacity={0.8}
+                    >
+                        {comparisonMode ? (
+                            <ArrowLeft size={18} color={theme.text} />
+                        ) : (
+                            <GitCompare size={18} color={theme.text} />
+                        )}
+                        <Text style={styles.compareButtonText}>
+                            {comparisonMode
+                                ? "Вернуться к выбору группы"
+                                : "Сравнить с другой группой"}
+                        </Text>
+                    </TouchableOpacity>
+                )}
 
                 <View style={styles.searchBox}>
                     <Search size={20} color={theme.accent} />
@@ -138,6 +161,22 @@ const createLocalStyles = (theme) =>
         },
         closeButton: {
             padding: 4,
+        },
+        compareButton: {
+            minHeight: 44,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingHorizontal: 12,
+            marginBottom: 12,
+            borderRadius: 10,
+            backgroundColor: theme.accent,
+        },
+        compareButtonText: {
+            color: theme.text,
+            fontSize: 14,
+            fontWeight: "600",
         },
         searchBox: {
             flexDirection: "row",

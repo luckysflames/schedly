@@ -14,6 +14,7 @@ export const ScheduleGrid = ({
     onChangeOffset,
     onPressWeekDay,
     onRefreshResult,
+    comparisonMode = false,
 }) => {
     const { isViewChanging } = useSchedlyStore();
     const { theme } = useTheme();
@@ -39,6 +40,7 @@ export const ScheduleGrid = ({
                 onLongPressLesson={onLongPressLesson}
                 onPressWeekDay={onPressWeekDay}
                 onRefreshResult={onRefreshResult}
+                comparisonMode={comparisonMode}
             />
         ),
         [
@@ -49,6 +51,7 @@ export const ScheduleGrid = ({
             onSelectLesson,
             onRefreshResult,
             scheduleData,
+            comparisonMode,
         ],
     );
 

@@ -11,6 +11,7 @@ export const MonthViewContent = ({
     hiddenSubjects,
     refreshing,
     onRefresh,
+    comparisonMode = false,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
@@ -166,10 +167,11 @@ export const MonthViewContent = ({
                                                             lesson.time,
                                                             dayItem.dateObj,
                                                         );
-                                                        const lessonBg =
-                                                            customSubjectColors[title] ||
-                                                            lesson.color ||
-                                                            theme.accentMuted;
+                                                                                                                const lessonBg = comparisonMode
+                                                                                                                        ? lesson.color || theme.accentMuted
+                                                                                                                        : customSubjectColors[title] ||
+                                                                                                                            lesson.color ||
+                                                                                                                            theme.accentMuted;
 
                                                         return (
                                                             <TouchableOpacity

@@ -6,7 +6,13 @@ import { BottomSheet } from "../../../shared/Modals/BottomSheet";
 import { getLessonTypeFullName, cleanTeacherName } from "../../../../utils/lessonFormatters";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
-export const LessonDetailsModal = ({ selectedLesson, selectedGroup, onClose }) => {
+export const LessonDetailsModal = ({
+    selectedLesson,
+    selectedGroup,
+    comparisonGroup,
+    comparisonMode = false,
+    onClose,
+}) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
 
@@ -17,8 +23,14 @@ export const LessonDetailsModal = ({ selectedLesson, selectedGroup, onClose }) =
 
     // Проверяем кастомный цвет для предмета в сторе, затем цвет из объекта урока, и дефолтные варианты
     const defaultBg = isLecture ? theme.main : theme.accentMuted;
-    const bulletColor =
-        (subjectName && customSubjectColors[subjectName]) || selectedLesson?.color || defaultBg;
+    const bulletColor = comparisonMode
+        ? selectedLesson?.color || defaultBg
+        : (subjectName && customSubjectColors[subjectName]) || selectedLesson?.color || defaultBg;
+
+    const lessonGroup =
+        comparisonMode && selectedLesson?.comparisonGroup === "second"
+            ? comparisonGroup
+            : selectedGroup;
 
     const lessonTypeName = getLessonTypeFullName(selectedLesson?.type);
     const lessonTeacher = cleanTeacherName(selectedLesson?.teacher);
@@ -58,8 +70,8 @@ export const LessonDetailsModal = ({ selectedLesson, selectedGroup, onClose }) =
                 <View style={styles.bsRow}>
                     <Users size={20} color={theme.accent} />
                     <Text style={styles.bsText}>
-                        {selectedGroup
-                            ? selectedGroup.name || selectedGroup.title
+                        {lessonGroup
+                            ? lessonGroup.name || lessonGroup.title
                             : "Группа не указана"}
                     </Text>
                 </View>

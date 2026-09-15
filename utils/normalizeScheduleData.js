@@ -1,4 +1,20 @@
 export const normalizeScheduleData = (apiData, customSubjectColors = {}) => {
+    const normalizedDays = Array.isArray(apiData)
+        ? apiData.every((item) => item?.date && Array.isArray(item.lessons))
+            ? apiData
+            : null
+        : null;
+
+    if (normalizedDays) {
+        return normalizedDays.map((day) => ({
+            ...day,
+            lessons: day.lessons.map((lesson) => ({
+                ...lesson,
+                color: customSubjectColors[lesson.subject] || lesson.color,
+            })),
+        }));
+    }
+
     const raspList = Array.isArray(apiData) ? apiData : apiData?.rasp || [];
 
     if (raspList.length === 0) return [];

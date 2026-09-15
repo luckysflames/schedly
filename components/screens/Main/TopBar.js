@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu } from "lucide-react-native";
+import { Menu, X } from "lucide-react-native";
 import { useTheme } from "../../../hooks/useTheme";
 
 export const TopBar = ({
@@ -10,6 +10,8 @@ export const TopBar = ({
     onOpenGroupModal,
     onPressCurrentDay,
     onOpenFilters,
+    comparisonGroup,
+    onExitComparison,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
@@ -90,19 +92,35 @@ export const TopBar = ({
                     <Text style={styles.monthTitle}>{monthTitle || "Расписание"}</Text>
                     <TouchableOpacity style={styles.groupSelectButton} onPress={onOpenGroupModal}>
                         <Text style={styles.selectedGroupNameSub}>
-                            {selectedGroup ? selectedGroup.name : "Выберите группу"}
+                            {comparisonGroup
+                                ? `${selectedGroup?.name} + ${comparisonGroup.name}`
+                                : selectedGroup
+                                  ? selectedGroup.name
+                                  : "Выберите группу"}
                         </Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
-            <TouchableOpacity
-                style={styles.todayButton}
-                onPress={onPressCurrentDay}
-                activeOpacity={0.7}
-            >
-                <Text style={styles.todayButtonText}>{currentDayMsk}</Text>
-            </TouchableOpacity>
+            {comparisonGroup ? (
+                <TouchableOpacity
+                    style={styles.todayButton}
+                    onPress={onExitComparison}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel="Закрыть сравнение групп"
+                >
+                    <X size={22} color={theme.accent} />
+                </TouchableOpacity>
+            ) : (
+                <TouchableOpacity
+                    style={styles.todayButton}
+                    onPress={onPressCurrentDay}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.todayButtonText}>{currentDayMsk}</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };

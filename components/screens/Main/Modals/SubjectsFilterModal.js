@@ -25,6 +25,9 @@ export const SubjectsFilterModal = ({
     onClose,
     currentView,
     onChangeView,
+    comparisonMode = false,
+    selectedGroup,
+    comparisonGroup,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
@@ -89,24 +92,47 @@ export const SubjectsFilterModal = ({
         normalized.forEach((day) => {
             day.lessons.forEach((lesson) => {
                 const subjectName = lesson.subject || lesson.name;
-                if (subjectName && !subjectsMap.has(subjectName)) {
+                if (!subjectName) return;
+
+                const subjectKey = comparisonMode
+                    ? `${lesson.comparisonGroup || "first"}:${subjectName}`
+                    : subjectName;
+                if (!subjectsMap.has(subjectKey)) {
                     const isLecture = lesson.type?.toLowerCase().includes("лек");
 
                     // Применяем ровно ту же логику выбора цвета, что и в карточках расписания
-                    const cardBg =
-                        customSubjectColors[subjectName] ||
-                        lesson.color ||
-                        (isLecture ? theme.main : theme.accentMuted);
+                    const cardBg = comparisonMode
+                        ? lesson.color || theme.accentMuted
+                        : customSubjectColors[subjectName] ||
+                          lesson.color ||
+                          (isLecture ? theme.main : theme.accentMuted);
+                    const groupName =
+                        lesson.comparisonGroup === "second"
+                            ? comparisonGroup?.name || comparisonGroup?.title
+                            : selectedGroup?.name || selectedGroup?.title;
+                    const displayName =
+                        comparisonMode && groupName
+                            ? `${subjectName} (${groupName})`
+                            : subjectName;
 
-                    subjectsMap.set(subjectName, cardBg);
+                    subjectsMap.set(subjectKey, {
+                        name: displayName,
+                        filterName: subjectName,
+                        color: cardBg,
+                    });
                 }
             });
         });
 
-        return Array.from(subjectsMap.entries())
-            .map(([name, color]) => ({ name, color }))
-            .sort((a, b) => a.name.localeCompare(b.name));
-    }, [scheduleData, customSubjectColors, theme]);
+        return Array.from(subjectsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [
+        scheduleData,
+        customSubjectColors,
+        theme,
+        comparisonMode,
+        selectedGroup,
+        comparisonGroup,
+    ]);
 
     if (!visible) return null;
 
@@ -214,13 +240,13 @@ export const SubjectsFilterModal = ({
                             {allSubjects.length === 0 ? (
                                 <Text style={styles.emptyText}>Нет доступных предметов</Text>
                             ) : (
-                                allSubjects.map(({ name: subject, color }) => {
-                                    const isHidden = hiddenSubjects.includes(subject);
+                                allSubjects.map(({ name, filterName, color }) => {
+                                    const isHidden = hiddenSubjects.includes(filterName);
                                     return (
                                         <TouchableOpacity
-                                            key={subject}
+                                            key={`${name}:${filterName}`}
                                             style={styles.itemRow}
-                                            onPress={() => onToggleSubject(subject)}
+                                            onPress={() => onToggleSubject(filterName)}
                                             activeOpacity={0.7}
                                         >
                                             <View
@@ -240,7 +266,7 @@ export const SubjectsFilterModal = ({
                                                     isHidden && styles.strikethrough,
                                                 ]}
                                             >
-                                                {subject}
+                                                {name}
                                             </Text>
                                         </TouchableOpacity>
                                     );

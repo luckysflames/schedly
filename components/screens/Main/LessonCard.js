@@ -11,6 +11,7 @@ export const LessonCard = ({
     isDayView = false,
     isPast = false,
     customSubjectColors = {},
+    comparisonMode = false,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
@@ -20,7 +21,9 @@ export const LessonCard = ({
     const defaultBg = isLecture ? theme.main : theme.accentMuted;
 
     // Ищем цвет в сторе, либо берем из урока или дефолтный
-    const cardBg = customSubjectColors[subjectName] || lesson.color || defaultBg;
+    const cardBg = comparisonMode
+        ? lesson.color || defaultBg
+        : customSubjectColors[subjectName] || lesson.color || defaultBg;
 
     const lessonTypeName = getLessonTypeFullName(lesson.type);
     const teacherName = cleanTeacherName(lesson.teacher);

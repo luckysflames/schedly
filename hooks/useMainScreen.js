@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Vibration } from "react-native";
 import { useSchedlyStore } from "../store/useSchedlyStore";
-import { fetchGroupList } from "../utils/api";
+import { fetchGroupList, fetchSchedule } from "../utils/api";
+import { compareScheduleData } from "../utils/compareScheduleData";
+import { useTheme } from "./useTheme";
 
 export const useMainScreen = () => {
+    const { theme } = useTheme();
     const {
         selectedGroup,
         favoriteGroups,
         scheduleData,
+        scheduleLoadResult,
         isLoading,
         setSelectedGroup,
         toggleFavoriteGroup,
@@ -51,6 +55,30 @@ export const useMainScreen = () => {
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [refreshResult, setRefreshResult] = useState(null);
     const [subjectForColorChange, setSubjectForColorChange] = useState(null);
+    const [comparisonGroup, setComparisonGroup] = useState(null);
+    const [comparisonScheduleData, setComparisonScheduleData] = useState(null);
+    const [isComparisonLoading, setIsComparisonLoading] = useState(false);
+
+    useEffect(() => {
+        if (scheduleLoadResult) setRefreshResult(scheduleLoadResult);
+    }, [scheduleLoadResult]);
+
+    useEffect(() => {
+        if (!comparisonScheduleData) return;
+
+        setComparisonScheduleData((currentData) =>
+            currentData?.map((day) => ({
+                ...day,
+                lessons: day.lessons.map((lesson) => ({
+                    ...lesson,
+                    color:
+                        lesson.comparisonGroup === "second"
+                            ? theme.textDark
+                            : theme.accent,
+                })),
+            })),
+        );
+    }, [theme.accent, theme.textDark]);
 
     const getGroupKey = (group) => group.id ?? group.name ?? group.title;
 
@@ -93,6 +121,38 @@ export const useMainScreen = () => {
     const handleSearch = (text) => {
         setSearchQuery(text);
     };
+
+    const startGroupComparison = useCallback(
+        async (secondGroup) => {
+            if (!selectedGroup?.id || !secondGroup?.id || selectedGroup.id === secondGroup.id) {
+                return;
+            }
+
+            setComparisonGroup(secondGroup);
+            setIsComparisonLoading(true);
+            try {
+                const secondSchedule = await fetchSchedule(secondGroup.id);
+                setComparisonScheduleData(
+                    compareScheduleData(scheduleData, secondSchedule, {
+                        firstColor: theme.accent,
+                        secondColor: theme.textDark,
+                    }),
+                );
+            } catch {
+                setComparisonGroup(null);
+                setComparisonScheduleData(null);
+                setRefreshResult({ reason: "unavailable", hasLocalData: Boolean(scheduleData) });
+            } finally {
+                setIsComparisonLoading(false);
+            }
+        },
+        [scheduleData, selectedGroup, theme],
+    );
+
+    const exitGroupComparison = useCallback(() => {
+        setComparisonGroup(null);
+        setComparisonScheduleData(null);
+    }, []);
 
     // Длинный тап по уроку (вызов пикера цвета)
     const handleLongPressLesson = useCallback((lesson) => {
@@ -137,6 +197,9 @@ export const useMainScreen = () => {
     return {
         // Стейты
         selectedGroup,
+        comparisonGroup,
+        comparisonScheduleData,
+        isComparisonLoading,
         favoriteGroups,
         scheduleData,
         isLoading,
@@ -163,6 +226,8 @@ export const useMainScreen = () => {
         setSubjectForColorChange,
         toggleModal,
         handleSearch,
+        startGroupComparison,
+        exitGroupComparison,
         handleLongPressLesson,
         handleWeekDayPress,
         getAlertTitle,

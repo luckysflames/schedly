@@ -17,6 +17,7 @@ export const DayViewContent = ({
     hiddenSubjects,
     refreshing,
     onRefresh,
+    comparisonMode = false,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
@@ -191,8 +192,11 @@ export const DayViewContent = ({
                             const pos = getLessonPosition(lesson.time);
                             const layout = getConcurrentLessonLayout(lessons, lessonIndex);
                             const subjectName = lesson.subject || lesson.name;
-                            const cardBg =
-                                customSubjectColors[subjectName] || lesson.color || theme.accentMuted;
+                                                        const cardBg = comparisonMode
+                                                                ? lesson.color || theme.accentMuted
+                                                                : customSubjectColors[subjectName] ||
+                                                                    lesson.color ||
+                                                                    theme.accentMuted;
                             const past = isLessonPast(lesson.time, currentDayItem.dateObj);
 
                             return (
@@ -204,6 +208,7 @@ export const DayViewContent = ({
                                     isDayView={true}
                                     isPast={past}
                                     customSubjectColors={customSubjectColors}
+                                    comparisonMode={comparisonMode}
                                     onPress={() => onSelectLesson(lesson)}
                                     onLongPress={() => onLongPressLesson?.(lesson)}
                                 />

@@ -16,6 +16,7 @@ const initialState = {
     selectedGroup: null,
     favoriteGroups: [],
     scheduleData: null,
+    scheduleLoadResult: null,
     hiddenSubjects: [],
     isLoading: false,
     error: null,
@@ -165,7 +166,7 @@ export const useSchedlyStore = create(
                 setScheduleData: (scheduleData) => set({ scheduleData }),
 
                 loadSchedule: async (idGroup) => {
-                    set({ isLoading: true, error: null });
+                    set({ isLoading: true, error: null, scheduleLoadResult: null });
                     const previousData = get().scheduleData;
 
                     try {
@@ -180,12 +181,13 @@ export const useSchedlyStore = create(
                                 : Object.keys(previousData).length > 0);
 
                         if (!hasData) {
-                            set({ isLoading: false });
-                            return {
+                            const result = {
                                 status: "fallback",
                                 reason: "empty",
                                 hasLocalData: Boolean(hasPreviousData),
                             };
+                            set({ isLoading: false, scheduleLoadResult: result });
+                            return result;
                         }
 
                         const isUnchanged = JSON.stringify(previousData) === JSON.stringify(data);
@@ -193,15 +195,19 @@ export const useSchedlyStore = create(
                         set({
                             scheduleData: data,
                             isLoading: false,
+                            scheduleLoadResult: {
+                                status: isUnchanged ? "unchanged" : "updated",
+                            },
                         });
-                        return { status: isUnchanged ? "unchanged" : "updated" };
+                        return get().scheduleLoadResult;
                     } catch (e) {
-                        set({ error: e.message, isLoading: false });
-                        return {
+                        const result = {
                             status: "fallback",
                             reason: e.code === "NETWORK_ERROR" ? "offline" : "unavailable",
                             hasLocalData: Boolean(previousData),
                         };
+                        set({ error: e.message, isLoading: false, scheduleLoadResult: result });
+                        return result;
                     }
                 },
 
@@ -238,8 +244,15 @@ export const useSchedlyStore = create(
             name: "schedly-schedule-storage",
             storage: createJSONStorage(() => sqliteZustandStorage),
             partialize: (state) => {
-                const { _hasHydrated, isLoading, error, isViewChanging, isAuthLoading, ...rest } =
-                    state;
+                const {
+                    _hasHydrated,
+                    isLoading,
+                    error,
+                    scheduleLoadResult,
+                    isViewChanging,
+                    isAuthLoading,
+                    ...rest
+                } = state;
                 return rest;
             },
             onRehydrateStorage: () => (state) => {

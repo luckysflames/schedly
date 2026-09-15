@@ -20,6 +20,7 @@ export const WeekViewContent = ({
     hiddenSubjects,
     refreshing,
     onRefresh,
+    comparisonMode = false,
 }) => {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
@@ -151,10 +152,11 @@ export const WeekViewContent = ({
                                             ?.toLowerCase()
                                             .includes("лек");
 
-                                        const cardBg =
-                                            customSubjectColors[subjectName] ||
-                                            lesson.color ||
-                                            (isLecture ? theme.main : theme.accentMuted);
+                                                                                const cardBg = comparisonMode
+                                                                                        ? lesson.color || theme.accentMuted
+                                                                                        : customSubjectColors[subjectName] ||
+                                                                                            lesson.color ||
+                                                                                            (isLecture ? theme.main : theme.accentMuted);
 
                                         const past = isLessonPast(
                                             lesson.time,
@@ -169,6 +171,7 @@ export const WeekViewContent = ({
                                                 backgroundColor={cardBg}
                                                 isPast={past}
                                                 customSubjectColors={customSubjectColors}
+                                                comparisonMode={comparisonMode}
                                                 onPress={() =>
                                                     onSelectLesson({ ...lesson, isPast: past })
                                                 }

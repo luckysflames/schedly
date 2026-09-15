@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { BookOpen } from "lucide-react-native";
 
@@ -16,9 +16,12 @@ import { CustomAlertModal } from "../components/shared/Modals/CustomAlertModal";
 export default function MainScreen() {
     const { theme, createStyles } = useTheme();
     const styles = createStyles(createLocalStyles);
-
+    const [isGroupModalRequested, setIsGroupModalRequested] = useState(false);
     const {
         selectedGroup,
+        comparisonGroup,
+        comparisonScheduleData,
+        isComparisonLoading,
         favoriteGroups,
         scheduleData,
         isLoading,
@@ -43,14 +46,23 @@ export default function MainScreen() {
         setSubjectForColorChange,
         toggleModal,
         handleSearch,
+        startGroupComparison,
+        exitGroupComparison,
         handleLongPressLesson,
         handleWeekDayPress,
         getAlertTitle,
         getAlertMessage,
     } = useMainScreen();
 
+    const isComparisonMode = Boolean(comparisonGroup);
+    const visibleScheduleData = isComparisonMode ? comparisonScheduleData : scheduleData;
+    const handleOpenGroupModal = () => {
+        setIsGroupModalRequested(true);
+        toggleModal(isComparisonMode ? "comparisonGroup" : "group", true);
+    };
+
     const renderMainContent = () => {
-        if (isLoading) {
+        if (isLoading || isComparisonLoading) {
             return (
                 <View style={styles.center}>
                     <ActivityIndicator size="large" color={theme.accent} />
@@ -61,7 +73,7 @@ export default function MainScreen() {
             );
         }
 
-        if (!selectedGroup) {
+        if (!selectedGroup || (isComparisonMode && !visibleScheduleData)) {
             return (
                 <View style={styles.center}>
                     <BookOpen size={48} color={theme.accent} />
@@ -70,7 +82,10 @@ export default function MainScreen() {
                     </Text>
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={() => toggleModal("group", true)}
+                        onPress={() => {
+                            setIsGroupModalRequested(true);
+                            toggleModal("group", true);
+                        }}
                     >
                         <Text style={styles.buttonText}>Выбрать группу</Text>
                     </TouchableOpacity>
@@ -80,7 +95,7 @@ export default function MainScreen() {
 
         return (
             <ScheduleGrid
-                scheduleData={scheduleData}
+                scheduleData={visibleScheduleData}
                 hiddenSubjects={hiddenSubjects}
                 onSelectLesson={setSelectedLesson}
                 onLongPressLesson={handleLongPressLesson}
@@ -89,6 +104,7 @@ export default function MainScreen() {
                 onChangeOffset={setCurrentOffset}
                 onPressWeekDay={handleWeekDayPress}
                 onRefreshResult={setRefreshResult}
+                comparisonMode={isComparisonMode}
             />
         );
     };
@@ -97,12 +113,36 @@ export default function MainScreen() {
         <View style={styles.container}>
             <TopBar
                 selectedGroup={selectedGroup}
+                comparisonGroup={comparisonGroup}
                 currentView={currentView}
                 offset={currentOffset}
-                onOpenGroupModal={() => toggleModal("group", true)}
+                onOpenGroupModal={handleOpenGroupModal}
                 onOpenFilters={() => toggleModal("filter", true)}
                 onPressCurrentDay={() => setCurrentOffset(0)}
+                onExitComparison={exitGroupComparison}
             />
+
+            {isComparisonMode && (
+                <View style={styles.comparisonLegend}>
+                    <Text style={styles.comparisonLegendTitle}>Сравнение расписаний</Text>
+                    <View style={styles.comparisonLegendRow}>
+                        <View
+                            style={[
+                                styles.legendSwatch,
+                                { backgroundColor: theme.accent },
+                            ]}
+                        />
+                        <Text style={styles.legendText}>{selectedGroup?.name}</Text>
+                        <View
+                            style={[
+                                styles.legendSwatch,
+                                { backgroundColor: theme.textDark },
+                            ]}
+                        />
+                        <Text style={styles.legendText}>{comparisonGroup?.name}</Text>
+                    </View>
+                </View>
+            )}
 
             {renderMainContent()}
 
@@ -117,6 +157,8 @@ export default function MainScreen() {
             <LessonDetailsModal
                 selectedLesson={selectedLesson}
                 selectedGroup={selectedGroup}
+                comparisonGroup={comparisonGroup}
+                comparisonMode={isComparisonMode}
                 onClose={() => setSelectedLesson(null)}
             />
 
@@ -134,27 +176,56 @@ export default function MainScreen() {
             />
 
             <GroupSelectModal
-                visible={modals.group}
-                groups={groups}
+                visible={isGroupModalRequested && (modals.group || modals.comparisonGroup)}
+                groups={
+                    modals.comparisonGroup
+                        ? groups.filter(
+                              (group) => String(group.id) !== String(selectedGroup?.id),
+                          )
+                        : groups
+                }
                 favoriteGroups={favoriteGroups}
                 searchQuery={searchQuery}
                 onSearch={handleSearch}
                 onSelectGroup={(item) => {
-                    setSelectedGroup(item);
-                    toggleModal("group", false);
+                    if (modals.comparisonGroup) {
+                        startGroupComparison(item);
+                        toggleModal("comparisonGroup", false);
+                        setIsGroupModalRequested(false);
+                    } else {
+                        setSelectedGroup(item);
+                        toggleModal("group", false);
+                        setIsGroupModalRequested(false);
+                    }
                 }}
                 onToggleFavorite={toggleFavoriteGroup}
-                onClose={() => toggleModal("group", false)}
+                onClose={() => {
+                    toggleModal("group", false);
+                    toggleModal("comparisonGroup", false);
+                    setIsGroupModalRequested(false);
+                }}
+                canCompare={Boolean(selectedGroup)}
+                comparisonMode={Boolean(modals.comparisonGroup)}
+                onCompare={() => {
+                    setIsGroupModalRequested(true);
+                    const isSelectingComparisonGroup = modals.comparisonGroup;
+                    toggleModal("group", isSelectingComparisonGroup);
+                    toggleModal("comparisonGroup", !isSelectingComparisonGroup);
+                }}
+                title={modals.comparisonGroup ? "Выбор второй группы" : "Выбор группы"}
             />
 
             <SubjectsFilterModal
                 visible={modals.filter}
-                scheduleData={scheduleData}
+                scheduleData={visibleScheduleData}
                 hiddenSubjects={hiddenSubjects}
                 onToggleSubject={toggleSubjectHidden}
                 onClose={() => toggleModal("filter", false)}
                 currentView={currentView}
                 onChangeView={setCurrentView}
+                comparisonMode={isComparisonMode}
+                selectedGroup={selectedGroup}
+                comparisonGroup={comparisonGroup}
             />
         </View>
     );
@@ -163,6 +234,32 @@ export default function MainScreen() {
 const createLocalStyles = (theme) =>
     StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.dark },
+        comparisonLegend: {
+            alignItems: "center",
+            paddingHorizontal: 12,
+            paddingBottom: 8,
+            backgroundColor: theme.dark,
+        },
+        comparisonLegendTitle: {
+            color: theme.text,
+            fontSize: 12,
+            fontWeight: "700",
+            marginBottom: 5,
+            textAlign: "center",
+        },
+        comparisonLegendRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            gap: 6,
+        },
+        legendSwatch: {
+            width: 12,
+            height: 12,
+            borderRadius: 3,
+        },
+        legendText: { color: theme.text, fontSize: 11, marginRight: 7 },
         center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
         placeholderText: {
             textAlign: "center",

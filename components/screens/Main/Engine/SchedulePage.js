@@ -15,6 +15,7 @@ export const SchedulePage = React.memo(
         onPressWeekDay,
         hiddenSubjects,
         onRefreshResult,
+        comparisonMode,
     }) => {
         const screenWidth = Dimensions.get("window").width;
         const { theme } = useTheme();
@@ -51,6 +52,7 @@ export const SchedulePage = React.memo(
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                     theme={theme}
+                    comparisonMode={comparisonMode}
                 />
             </View>
         );
