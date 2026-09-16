@@ -144,7 +144,7 @@ const createLocalStyles = (theme) =>
             fontWeight: "700",
         },
         defaultButtonText: {
-            color: theme.textDark,
+            color: theme.text,
         },
         destructiveButtonText: {
             color: theme.red,

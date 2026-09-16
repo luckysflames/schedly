@@ -97,6 +97,42 @@ export const THEMES = {
         text: "#FFFFFF",
         textDark: "#7f7f7f",
     },
+    discord: {
+        accent: "#5865f2", // Фирменный Blurple
+        accentMuted: "#5865f285",
+        main: "#313338", // Классический темный фон чатов Discord
+        dark: "#2b2d31", // Цвет панелей и вложений
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#ffffff",
+        textDark: "#949ba4",
+    },
+    spotify: {
+        accent: "#1db954", // Фирменный Spotify Green
+        accentMuted: "#1db95485",
+        main: "#121212", // Базовый угольно-черный фон плеера
+        dark: "#000000",
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#ffffff",
+        textDark: "#939393",
+    },
+    netflix: {
+        accent: "#e50914",
+        accentMuted: "#e5091485",
+        main: "#141414",
+        dark: "#000000",
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#ffffff",
+        textDark: "#808080",
+    },
+    steam: {
+        accent: "#66c0f4", // Фирменный темно-синий Steam (или можно использовать акцентную кнопку #66c0f4)
+        accentMuted: "#66c0f485",
+        main: "#171a21", // Классический темный фон клиента Steam
+        dark: "#0f1015", // Более глубокий фоновый оттенок
+        overlay: "rgba(0, 0, 0, 0.85)",
+        text: "#ffffff",
+        textDark: "#8f98a0", // Фирменный приглушенный серый текст Steam
+    },
 };
 
 export const DEFAULT_THEME_NAME = "schedly";

@@ -14,7 +14,10 @@ export default function ThemeSelectModal({ visible, onClose }) {
         <BottomSheet
             visible={visible}
             onClose={onClose}
-            containerStyle={[styles.bottomSheetContainer, { backgroundColor: theme.main }]}
+            containerStyle={[
+                styles.bottomSheetContainer,
+                { backgroundColor: theme.main, maxHeight: "60%" },
+            ]}
         >
             <View style={styles.bottomSheetHeader}>
                 <Text style={styles.bottomSheetTitle}>Выбор темы</Text>

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu, X } from "lucide-react-native";
+import { Menu, X, Users } from "lucide-react-native";
 import { useTheme } from "../../../hooks/useTheme";
 
 export const TopBar = ({
@@ -90,13 +90,18 @@ export const TopBar = ({
 
                 <View style={styles.monthRow}>
                     <Text style={styles.monthTitle}>{monthTitle || "Расписание"}</Text>
-                    <TouchableOpacity style={styles.groupSelectButton} onPress={onOpenGroupModal}>
-                        <Text style={styles.selectedGroupNameSub}>
+                    <TouchableOpacity 
+                        style={styles.groupSelectButton} 
+                        onPress={onOpenGroupModal}
+                        activeOpacity={0.8}
+                    >
+                        <Users size={12} color={theme.accent} />
+                        <Text style={styles.selectedGroupNameSub} numberOfLines={1}>
                             {comparisonGroup
                                 ? `${selectedGroup?.name} + ${comparisonGroup.name}`
                                 : selectedGroup
-                                  ? selectedGroup.name
-                                  : "Выберите группу"}
+                                ? selectedGroup.name
+                                : "Выберите группу"}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -134,15 +139,39 @@ const createLocalStyles = (theme) =>
             paddingVertical: 12,
             backgroundColor: theme.dark,
         },
-        headerLeftContainer: { flexDirection: "row", gap: 5, alignItems: "center" },
-        monthRow: { flexDirection: "column" },
-        monthTitle: { fontSize: 20, fontWeight: "bold", color: theme.accent },
+        headerLeftContainer: { 
+            flexDirection: "row", 
+            gap: 8, 
+            alignItems: "center",
+            flex: 1,
+            marginRight: 8,
+        },
+        monthRow: { 
+            flexDirection: "column",
+            flex: 1,
+        },
+        monthTitle: { 
+            fontSize: 20, 
+            fontWeight: "bold", 
+            color: theme.accent,
+        },
         groupSelectButton: {
             flexDirection: "row",
             alignItems: "center",
-            marginTop: 4,
+            marginTop: 5,
+            alignSelf: "flex-start",
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 14,
+            borderWidth: 1,
+            borderColor: theme.accent,
+            gap: 6,
         },
-        selectedGroupNameSub: { fontSize: 12, color: theme.text },
+        selectedGroupNameSub: { 
+            fontSize: 12, 
+            color: theme.text,
+            fontWeight: "700",
+        },
         iconButton: {
             borderRadius: 8,
             width: 44,

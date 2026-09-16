@@ -15,6 +15,19 @@ export const normalizeScheduleData = (apiData, customSubjectColors = {}) => {
         }));
     }
 
+    // Вспомогательная функция для первой заглавной буквы и форматирования аудиторий
+    const capitalizeAuditory = (value) => {
+        if (!value) return "";
+        let str = String(value).trim();
+        if (str.length === 0) return "";
+
+        // Ставим пробел после запятой, если его нет (например, "25-511,25-511а" -> "25-511, 25-511а")
+        str = str.replace(/,\s*/g, ", ");
+
+        // Делаем первую букву строки заглавной
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    };
+
     const raspList = Array.isArray(apiData) ? apiData : apiData?.rasp || [];
 
     if (raspList.length === 0) return [];
@@ -85,10 +98,43 @@ export const normalizeScheduleData = (apiData, customSubjectColors = {}) => {
             type: (item.дисциплина || "").split(" ")[0],
             subject: cleanSubject,
             teacher: item.преподаватель,
-            auditory: item.аудитория,
+            auditory: capitalizeAuditory(item.аудитория),
             color: finalColor,
         });
     });
 
     return Object.values(groupedMap);
 };
+
+const getDateKey = (date) => {
+    const value = String(date || "");
+    const isoDate = value.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+    if (isoDate) return isoDate;
+
+    const parsedDate = new Date(value);
+    return Number.isNaN(parsedDate.getTime()) ? value : parsedDate.toISOString().slice(0, 10);
+};
+
+export const getComparableScheduleData = (scheduleData) =>
+    normalizeScheduleData(scheduleData)
+        .map((day) => ({
+            date: getDateKey(day.date),
+            lessons: day.lessons
+                .map((lesson) => ({
+                    id: lesson.id ?? null,
+                    time: lesson.time ?? "",
+                    number: lesson.number ?? null,
+                    type: lesson.type ?? "",
+                    subject: lesson.subject ?? "",
+                    teacher: lesson.teacher ?? "",
+                    auditory: lesson.auditory ?? "",
+                }))
+                .sort((first, second) =>
+                    JSON.stringify(first).localeCompare(JSON.stringify(second)),
+                ),
+        }))
+        .sort((first, second) => first.date.localeCompare(second.date));
+
+export const areSchedulesEqual = (firstSchedule, secondSchedule) =>
+    JSON.stringify(getComparableScheduleData(firstSchedule)) ===
+    JSON.stringify(getComparableScheduleData(secondSchedule));

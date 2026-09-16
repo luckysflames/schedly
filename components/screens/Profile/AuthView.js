@@ -21,14 +21,14 @@ export default function AuthView({ onLogin, isLoading }) {
         <View style={styles.authContainer}>
             <View style={styles.authCard}>
                 <Text style={styles.authTitle}>Авторизация</Text>
-                <Text style={styles.authSubtitle}>Войдите под учетной записью ДГТУ</Text>
+                <Text style={styles.authSubtitle}>Войдите под учётной записью ДГТУ</Text>
 
                 <View style={styles.inputContainer}>
                     <Mail size={18} color={theme.accent} style={styles.inputIcon} />
                     <TextInput
                         style={[styles.input, { color: theme.text }]}
                         placeholder="Email / Логин"
-                        placeholderTextColor={theme.textSecondary || "#888"}
+                        placeholderTextColor={theme.textDark}
                         value={email}
                         onChangeText={setEmail}
                         autoCapitalize="none"
@@ -40,7 +40,7 @@ export default function AuthView({ onLogin, isLoading }) {
                     <TextInput
                         style={[styles.input, { color: theme.text }]}
                         placeholder="Пароль"
-                        placeholderTextColor={theme.textSecondary || "#888"}
+                        placeholderTextColor={theme.textDark}
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry

@@ -8,6 +8,7 @@ import {
 } from "../../../../utils/lessonFormatters";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 import { useWeekSchedule } from "../../../../hooks/useWeekSchedule";
+import { getSubjectFilterKey } from "../../../../utils/subjectFilter";
 
 export const WeekViewContent = ({
     daysList,
@@ -137,7 +138,9 @@ export const WeekViewContent = ({
                                         const subjectName = lesson.subject || lesson.name;
                                         if (
                                             hiddenSubjects &&
-                                            hiddenSubjects.includes(subjectName)
+                                            hiddenSubjects.includes(
+                                                getSubjectFilterKey(lesson, comparisonMode),
+                                            )
                                         ) {
                                             return null;
                                         }

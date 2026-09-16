@@ -8,6 +8,7 @@ import {
     saveAuthCredentials,
     setAuthStateUpdater,
 } from "../utils/api";
+import { areSchedulesEqual } from "../utils/normalizeScheduleData";
 
 const initialState = {
     _hasHydrated: false,
@@ -190,7 +191,7 @@ export const useSchedlyStore = create(
                             return result;
                         }
 
-                        const isUnchanged = JSON.stringify(previousData) === JSON.stringify(data);
+                        const isUnchanged = areSchedulesEqual(previousData, data);
 
                         set({
                             scheduleData: data,

@@ -12,6 +12,7 @@ import {
 import { Check, X, LayoutGrid, Clock, Calendar, Scroll } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { normalizeScheduleData } from "../../../../utils/normalizeScheduleData";
+import { getSubjectFilterKey } from "../../../../utils/subjectFilter";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -94,9 +95,7 @@ export const SubjectsFilterModal = ({
                 const subjectName = lesson.subject || lesson.name;
                 if (!subjectName) return;
 
-                const subjectKey = comparisonMode
-                    ? `${lesson.comparisonGroup || "first"}:${subjectName}`
-                    : subjectName;
+                const subjectKey = getSubjectFilterKey(lesson, comparisonMode);
                 if (!subjectsMap.has(subjectKey)) {
                     const isLecture = lesson.type?.toLowerCase().includes("лек");
 
@@ -117,7 +116,7 @@ export const SubjectsFilterModal = ({
 
                     subjectsMap.set(subjectKey, {
                         name: displayName,
-                        filterName: subjectName,
+                        filterName: subjectKey,
                         color: cardBg,
                     });
                 }
@@ -300,7 +299,7 @@ const createLocalStyles = (theme) =>
             top: 0,
             bottom: 0,
             width: DRAWER_WIDTH,
-            backgroundColor: theme.dark,
+            backgroundColor: theme.main,
             paddingTop: 50,
             paddingHorizontal: 20,
             paddingBottom: 20,
@@ -340,7 +339,7 @@ const createLocalStyles = (theme) =>
             gap: 14,
         },
         activeViewItemRow: {
-            backgroundColor: theme.accentMuted,
+            backgroundColor: theme.accent + "22",
         },
         viewItemText: {
             fontSize: 16,

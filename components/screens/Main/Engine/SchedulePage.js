@@ -35,6 +35,7 @@ export const SchedulePage = React.memo(
             currentView,
             offset,
             hiddenSubjects,
+            comparisonMode,
         );
 
         return (

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { normalizeScheduleData } from "../utils/normalizeScheduleData";
+import { getSubjectFilterKey } from "../utils/subjectFilter";
 
 const HOUR_HEIGHT = 70;
 const HOURS = [
@@ -25,6 +26,7 @@ export const useScheduleGrid = (
     currentView = "week",
     offset = 0,
     hiddenSubjects = [],
+    comparisonMode = false,
 ) => {
     const daysList = useMemo(() => {
         const now = new Date();
@@ -100,7 +102,10 @@ export const useScheduleGrid = (
             });
 
             const filteredLessons = matchedGroup
-                ? matchedGroup.lessons.filter((lesson) => !hiddenSubjects.includes(lesson.subject))
+                ? matchedGroup.lessons.filter(
+                      (lesson) =>
+                          !hiddenSubjects.includes(getSubjectFilterKey(lesson, comparisonMode)),
+                  )
                 : [];
 
             return {
@@ -108,7 +113,7 @@ export const useScheduleGrid = (
                 lessons: filteredLessons,
             };
         });
-    }, [scheduleData, currentView, offset, hiddenSubjects]);
+    }, [scheduleData, currentView, offset, hiddenSubjects, comparisonMode]);
 
     const monthTitle = useMemo(() => {
         if (!daysList || daysList.length === 0) return "";

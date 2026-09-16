@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } 
 import { useTheme } from "../../../../hooks/useTheme";
 import { isLessonPast } from "../../../../utils/lessonFormatters";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
+import { getSubjectFilterKey } from "../../../../utils/subjectFilter";
 
 export const MonthViewContent = ({
     daysList,
@@ -147,7 +148,9 @@ export const MonthViewContent = ({
 
                                             const visibleLessons = slotLessons.filter((lesson) => {
                                                 const title = lesson.subject || lesson.name;
-                                                return !hiddenSubjects?.includes(title);
+                                                return !hiddenSubjects?.includes(
+                                                    getSubjectFilterKey(lesson, comparisonMode),
+                                                );
                                             });
 
                                             if (visibleLessons.length === 0) {

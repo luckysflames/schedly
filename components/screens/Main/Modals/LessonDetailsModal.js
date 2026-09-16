@@ -59,20 +59,22 @@ export const LessonDetailsModal = ({
                         {selectedLesson?.auditory || "Аудитория не указана"}
                     </Text>
                 </View>
-                <View style={styles.bsRow}>
-                    <Info size={20} color={theme.accent} />
-                    <Text style={styles.bsText}>{lessonTypeName}</Text>
-                </View>
-                <View style={styles.bsRow}>
-                    <GraduationCap size={20} color={theme.accent} />
-                    <Text style={styles.bsText}>{lessonTeacher}</Text>
-                </View>
+                {lessonTypeName && (
+                    <View style={styles.bsRow}>
+                        <Info size={20} color={theme.accent} />
+                        <Text style={styles.bsText}>{lessonTypeName}</Text>
+                    </View>
+                )}
+                {lessonTeacher && (
+                    <View style={styles.bsRow}>
+                        <GraduationCap size={20} color={theme.accent} />
+                        <Text style={styles.bsText}>{lessonTeacher}</Text>
+                    </View>
+                )}
                 <View style={styles.bsRow}>
                     <Users size={20} color={theme.accent} />
                     <Text style={styles.bsText}>
-                        {lessonGroup
-                            ? lessonGroup.name || lessonGroup.title
-                            : "Группа не указана"}
+                        {lessonGroup ? lessonGroup.name || lessonGroup.title : "Группа не указана"}
                     </Text>
                 </View>
             </View>

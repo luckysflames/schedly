@@ -7,6 +7,7 @@ import {
     isLessonPast,
 } from "../../../../utils/lessonFormatters";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
+import { getSubjectFilterKey } from "../../../../utils/subjectFilter";
 
 export const DayViewContent = ({
     daysList,
@@ -188,7 +189,12 @@ export const DayViewContent = ({
                             <View key={index} style={styles.gridLine} />
                         ))}
                         {lessons.map((lesson, lessonIndex) => {
-                            if (hiddenSubjects?.includes(lesson.title || lesson.name)) return null;
+                            if (
+                                hiddenSubjects?.includes(
+                                    getSubjectFilterKey(lesson, comparisonMode),
+                                )
+                            )
+                                return null;
                             const pos = getLessonPosition(lesson.time);
                             const layout = getConcurrentLessonLayout(lessons, lessonIndex);
                             const subjectName = lesson.subject || lesson.name;
