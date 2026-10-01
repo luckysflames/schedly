@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity } from "react-native";
-import { Bug, Palette, Users, LogOut } from "lucide-react-native";
+import { Bell, Bug, Palette, Users, LogOut } from "lucide-react-native";
 import Constants from "expo-constants";
 
 import { useSchedlyStore } from "../store/useSchedlyStore";
@@ -19,7 +19,12 @@ export default function SettingsScreen({ navigation }) {
 
     const logout = useSchedlyStore((state) => state.logout);
     const token = useSchedlyStore((state) => state.token);
-
+    const showScheduleUpdateModal = useSchedlyStore(
+        (state) => state.showScheduleUpdateModal,
+    );
+    const setShowScheduleUpdateModal = useSchedlyStore(
+        (state) => state.setShowScheduleUpdateModal,
+    );
     const [isDevModalVisible, setDevModalVisible] = useState(false);
     const [isThemeModalVisible, setThemeModalVisible] = useState(false);
 
@@ -51,7 +56,13 @@ export default function SettingsScreen({ navigation }) {
                     label="Темы оформления"
                     onPress={() => setThemeModalVisible(true)}
                 />
-
+                <SettingItem
+                    icon={Bell}
+                    label="Результат обновления"
+                    type="switch"
+                    value={showScheduleUpdateModal}
+                    onValueChange={setShowScheduleUpdateModal}
+                />
                 <Text style={styles.sectionTitle}>Поддержка и связь</Text>
                 <SettingItem icon={Bug} label="Сообщить об ошибке" onPress={handleReportBug} />
                 <SettingItem

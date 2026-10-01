@@ -73,17 +73,30 @@ export const useScheduleGrid = (
             const targetMonthDate = new Date(now.getFullYear(), now.getMonth() + offset, 1);
             const year = targetMonthDate.getFullYear();
             const month = targetMonthDate.getMonth();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDayOfMonth = new Date(year, month, 1);
+            const firstDayIndex = firstDayOfMonth.getDay();
+            const adjustedFirstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const lastDayIndex = lastDayOfMonth.getDay();
+            const adjustedLastDayIndex = lastDayIndex === 0 ? 0 : 7 - lastDayIndex;
+            const currentDate = new Date(year, month, 1 - adjustedFirstDayIndex);
+            const lastVisibleDate = new Date(
+                year,
+                month,
+                lastDayOfMonth.getDate() + adjustedLastDayIndex,
+            );
 
-            for (let i = 1; i <= daysInMonth; i++) {
-                const date = new Date(year, month, i);
+            while (currentDate <= lastVisibleDate) {
+                const date = new Date(currentDate);
                 templates.push({
                     day: date.toLocaleDateString("ru-RU", { weekday: "short" }).toUpperCase(),
                     fullName: date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" }),
                     date: date.toISOString(),
                     dateObj: date,
                     lessons: [],
+                    isOtherMonth: date.getMonth() !== month,
                 });
+                currentDate.setDate(currentDate.getDate() + 1);
             }
         }
 

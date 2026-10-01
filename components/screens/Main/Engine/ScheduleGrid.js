@@ -27,6 +27,7 @@ export const ScheduleGrid = ({
         Array.from({ length: TOTAL_PAGES }, (_, index) => index - CENTER_INDEX),
     ).current;
     const currentIndexRef = useRef(CENTER_INDEX + offset);
+    const isUserDraggingRef = useRef(false);
     const [isJumping, setIsJumping] = useState(false);
 
     const renderPage = useCallback(
@@ -57,6 +58,9 @@ export const ScheduleGrid = ({
 
     const handleMomentumScrollEnd = useCallback(
         (event) => {
+            if (!isUserDraggingRef.current) return;
+
+            isUserDraggingRef.current = false;
             const contentOffsetX = event.nativeEvent.contentOffset.x;
             const pageIndex = Math.round(contentOffsetX / screenWidth);
             currentIndexRef.current = pageIndex;
@@ -110,7 +114,10 @@ export const ScheduleGrid = ({
                 keyExtractor={(item) => `${currentView}_${item}`}
                 renderItem={renderPage}
                 onMomentumScrollEnd={handleMomentumScrollEnd}
-                onScrollBeginDrag={() => setIsJumping(false)}
+                onScrollBeginDrag={() => {
+                    isUserDraggingRef.current = true;
+                    setIsJumping(false);
+                }}
                 onScrollToIndexFailed={(info) => {
                     setTimeout(() => {
                         flatListRef.current?.scrollToIndex({

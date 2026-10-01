@@ -1,3 +1,5 @@
+import { cleanTeacherName, getLessonTypeFullName } from "./lessonFormatters";
+
 export const normalizeScheduleData = (apiData, customSubjectColors = {}) => {
     const normalizedDays = Array.isArray(apiData)
         ? apiData.every((item) => item?.date && Array.isArray(item.lessons))
@@ -98,6 +100,7 @@ export const normalizeScheduleData = (apiData, customSubjectColors = {}) => {
             type: (item.дисциплина || "").split(" ")[0],
             subject: cleanSubject,
             teacher: item.преподаватель,
+            group: item.группа,
             auditory: capitalizeAuditory(item.аудитория),
             color: finalColor,
         });
@@ -117,23 +120,23 @@ const getDateKey = (date) => {
 
 export const getComparableScheduleData = (scheduleData) =>
     normalizeScheduleData(scheduleData)
-        .map((day) => ({
-            date: getDateKey(day.date),
-            lessons: day.lessons
-                .map((lesson) => ({
-                    id: lesson.id ?? null,
-                    time: lesson.time ?? "",
-                    number: lesson.number ?? null,
-                    type: lesson.type ?? "",
-                    subject: lesson.subject ?? "",
-                    teacher: lesson.teacher ?? "",
-                    auditory: lesson.auditory ?? "",
-                }))
-                .sort((first, second) =>
-                    JSON.stringify(first).localeCompare(JSON.stringify(second)),
-                ),
-        }))
-        .sort((first, second) => first.date.localeCompare(second.date));
+        .flatMap((day) =>
+            day.lessons.map((lesson) => ({
+                date: getDateKey(day.date),
+                subject: normalizeComparableText(lesson.subject ?? lesson.name),
+                number: normalizeComparableText(lesson.number),
+                time: normalizeComparableText(lesson.time).replace(/\s*-\s*/g, " - "),
+                auditory: normalizeComparableText(lesson.auditory).replace(/,\s*/g, ", "),
+                type:
+                    getLessonTypeFullName(lesson.type) || normalizeComparableText(lesson.type),
+                teacher: cleanTeacherName(lesson.teacher) || "",
+            })),
+        )
+        .map((lesson) => ({ lesson, sortKey: JSON.stringify(lesson) }))
+        .sort((first, second) => first.sortKey.localeCompare(second.sortKey))
+        .map(({ lesson }) => lesson);
+
+const normalizeComparableText = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
 
 export const areSchedulesEqual = (firstSchedule, secondSchedule) =>
     JSON.stringify(getComparableScheduleData(firstSchedule)) ===

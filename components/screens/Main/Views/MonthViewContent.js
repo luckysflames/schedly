@@ -25,45 +25,9 @@ export const MonthViewContent = ({
         return <View style={styles.container} />;
     }
 
-    const firstDayIndex = daysList[0].dateObj.getDay();
-    const adjustedFirstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-
-    const firstDateObj = daysList[0].dateObj;
-    const prevMonthDays = [];
-    for (let i = adjustedFirstDayIndex; i > 0; i--) {
-        const dateObj = new Date(firstDateObj);
-        dateObj.setDate(firstDateObj.getDate() - i);
-        prevMonthDays.push({
-            dateObj,
-            lessons: [],
-            isOtherMonth: true,
-        });
-    }
-
-    const lastDateObj = daysList[daysList.length - 1].dateObj;
-    const lastDayIndex = lastDateObj.getDay();
-    const adjustedLastDayIndex = lastDayIndex === 0 ? 0 : 7 - lastDayIndex;
-
-    const nextMonthDays = [];
-    for (let i = 1; i <= adjustedLastDayIndex; i++) {
-        const dateObj = new Date(lastDateObj);
-        dateObj.setDate(lastDateObj.getDate() + i);
-        nextMonthDays.push({
-            dateObj,
-            lessons: [],
-            isOtherMonth: true,
-        });
-    }
-
-    const paddedDaysList = [
-        ...prevMonthDays,
-        ...daysList.map((d) => ({ ...d, isOtherMonth: false })),
-        ...nextMonthDays,
-    ];
-
     const weeks = [];
-    for (let i = 0; i < paddedDaysList.length; i += 7) {
-        weeks.push(paddedDaysList.slice(i, i + 7));
+    for (let i = 0; i < daysList.length; i += 7) {
+        weeks.push(daysList.slice(i, i + 7));
     }
 
     return (

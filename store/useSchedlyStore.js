@@ -13,9 +13,13 @@ import { areSchedulesEqual } from "../utils/normalizeScheduleData";
 const initialState = {
     _hasHydrated: false,
     isVibration: true,
+    showScheduleUpdateModal: true,
     themeName: DEFAULT_THEME_NAME,
     selectedGroup: null,
+    groups: [],
+    teachers: [],
     favoriteGroups: [],
+    favoriteTeachers: [],
     scheduleData: null,
     scheduleLoadResult: null,
     hiddenSubjects: [],
@@ -121,6 +125,24 @@ export const useSchedlyStore = create(
                 // --- UI & System Actions ---
                 setHasHydrated: (status) => set({ _hasHydrated: status }),
                 setIsVibration: (isVibration) => set({ isVibration }),
+                setShowScheduleUpdateModal: (showScheduleUpdateModal) =>
+                    set({ showScheduleUpdateModal, scheduleLoadResult: null }),
+                setScheduleLoadResult: (scheduleLoadResult) =>
+                    set({
+                        scheduleLoadResult: get().showScheduleUpdateModal
+                            ? scheduleLoadResult
+                            : null,
+                    }),
+                setGroupsIfChanged: (groups) => {
+                    if (JSON.stringify(get().groups) !== JSON.stringify(groups)) {
+                        set({ groups });
+                    }
+                },
+                setTeachersIfChanged: (teachers) => {
+                    if (JSON.stringify(get().teachers) !== JSON.stringify(teachers)) {
+                        set({ teachers });
+                    }
+                },
                 setCurrentView: (currentView) => set({ currentView }),
                 setIsViewChanging: (isViewChanging) => set({ isViewChanging }),
 
@@ -164,6 +186,48 @@ export const useSchedlyStore = create(
                     });
                 },
 
+                toggleFavoriteTeacher: (teacher) => {
+                    if (!teacher) return;
+
+                    const teacherKey =
+                        teacher.id ??
+                        teacher.idTeacher ??
+                        teacher.teacherId ??
+                        teacher.teacherID ??
+                        teacher.кодПреподавателя ??
+                        teacher.name;
+                    if (teacherKey === undefined || teacherKey === null) return;
+
+                    const { favoriteTeachers } = get();
+                    const isFavorite = favoriteTeachers.some(
+                        (favoriteTeacher) =>
+                            String(
+                                favoriteTeacher.id ??
+                                    favoriteTeacher.idTeacher ??
+                                    favoriteTeacher.teacherId ??
+                                    favoriteTeacher.teacherID ??
+                                    favoriteTeacher.кодПреподавателя ??
+                                    favoriteTeacher.name,
+                            ) === String(teacherKey),
+                    );
+
+                    set({
+                        favoriteTeachers: isFavorite
+                            ? favoriteTeachers.filter(
+                                  (favoriteTeacher) =>
+                                      String(
+                                          favoriteTeacher.id ??
+                                              favoriteTeacher.idTeacher ??
+                                              favoriteTeacher.teacherId ??
+                                              favoriteTeacher.teacherID ??
+                                              favoriteTeacher.кодПреподавателя ??
+                                              favoriteTeacher.name,
+                                      ) !== String(teacherKey),
+                              )
+                            : [...favoriteTeachers, teacher],
+                    });
+                },
+
                 setScheduleData: (scheduleData) => set({ scheduleData }),
 
                 loadSchedule: async (idGroup) => {
@@ -187,8 +251,11 @@ export const useSchedlyStore = create(
                                 reason: "empty",
                                 hasLocalData: Boolean(hasPreviousData),
                             };
-                            set({ isLoading: false, scheduleLoadResult: result });
-                            return result;
+                            set({
+                                isLoading: false,
+                                scheduleLoadResult: get().showScheduleUpdateModal ? result : null,
+                            });
+                            return get().scheduleLoadResult;
                         }
 
                         const isUnchanged = areSchedulesEqual(previousData, data);
@@ -196,9 +263,9 @@ export const useSchedlyStore = create(
                         set({
                             scheduleData: data,
                             isLoading: false,
-                            scheduleLoadResult: {
-                                status: isUnchanged ? "unchanged" : "updated",
-                            },
+                            scheduleLoadResult: get().showScheduleUpdateModal
+                                ? { status: isUnchanged ? "unchanged" : "updated" }
+                                : null,
                         });
                         return get().scheduleLoadResult;
                     } catch (e) {
@@ -207,8 +274,12 @@ export const useSchedlyStore = create(
                             reason: e.code === "NETWORK_ERROR" ? "offline" : "unavailable",
                             hasLocalData: Boolean(previousData),
                         };
-                        set({ error: e.message, isLoading: false, scheduleLoadResult: result });
-                        return result;
+                        set({
+                            error: e.message,
+                            isLoading: false,
+                            scheduleLoadResult: get().showScheduleUpdateModal ? result : null,
+                        });
+                        return get().scheduleLoadResult;
                     }
                 },
 
@@ -257,8 +328,8 @@ export const useSchedlyStore = create(
                 return rest;
             },
             onRehydrateStorage: () => (state) => {
-                state?.setHasHydrated(true);
                 const currentGroup = state?.selectedGroup;
+                state?.setHasHydrated(true);
                 if (currentGroup?.id) {
                     state.loadSchedule(currentGroup.id);
                 }

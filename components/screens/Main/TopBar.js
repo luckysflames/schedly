@@ -1,16 +1,19 @@
 import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu, X, Users } from "lucide-react-native";
+import { Menu, X, User, Users } from "lucide-react-native";
 import { useTheme } from "../../../hooks/useTheme";
+import { getTeacherShortName } from "../../../utils/lessonFormatters";
 
 export const TopBar = ({
     selectedGroup,
+    isTeacherSchedule = false,
     currentView = "week",
     offset = 0,
     onOpenGroupModal,
     onPressCurrentDay,
     onOpenFilters,
     comparisonGroup,
+    comparisonTeacher = false,
     onExitComparison,
 }) => {
     const { theme, createStyles } = useTheme();
@@ -77,6 +80,11 @@ export const TopBar = ({
         day: "numeric",
     }).format(new Date());
 
+    const selectedName = selectedGroup?.name || selectedGroup?.title || selectedGroup?.fio;
+    const comparisonName = comparisonTeacher
+        ? getTeacherShortName(comparisonGroup?.name || comparisonGroup?.title || comparisonGroup?.fio)
+        : comparisonGroup?.name || comparisonGroup?.title || comparisonGroup?.fio;
+
     return (
         <View style={styles.topBar}>
             <View style={styles.headerLeftContainer}>
@@ -95,13 +103,19 @@ export const TopBar = ({
                         onPress={onOpenGroupModal}
                         activeOpacity={0.8}
                     >
-                        <Users size={12} color={theme.accent} />
+                        {isTeacherSchedule && !comparisonGroup ? (
+                            <User size={12} color={theme.accent} />
+                        ) : (
+                            <Users size={12} color={theme.accent} />
+                        )}
                         <Text style={styles.selectedGroupNameSub} numberOfLines={1}>
                             {comparisonGroup
-                                ? `${selectedGroup?.name} + ${comparisonGroup.name}`
+                                ? `${selectedName} + ${comparisonName}`
                                 : selectedGroup
-                                ? selectedGroup.name
-                                : "Выберите группу"}
+                                ? isTeacherSchedule
+                                    ? getTeacherShortName(selectedName)
+                                    : selectedName
+                                : "Выберите расписание"}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -113,7 +127,11 @@ export const TopBar = ({
                     onPress={onExitComparison}
                     activeOpacity={0.7}
                     accessibilityRole="button"
-                    accessibilityLabel="Закрыть сравнение групп"
+                    accessibilityLabel={
+                        comparisonTeacher
+                            ? "Закрыть сравнение с преподавателем"
+                            : "Закрыть сравнение групп"
+                    }
                 >
                     <X size={22} color={theme.accent} />
                 </TouchableOpacity>

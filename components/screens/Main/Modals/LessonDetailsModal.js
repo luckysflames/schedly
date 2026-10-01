@@ -31,6 +31,12 @@ export const LessonDetailsModal = ({
         comparisonMode && selectedLesson?.comparisonGroup === "second"
             ? comparisonGroup
             : selectedGroup;
+    const lessonGroupName =
+        selectedLesson?.group ||
+        lessonGroup?.name ||
+        lessonGroup?.title ||
+        lessonGroup?.fio ||
+        "Группа не указана";
 
     const lessonTypeName = getLessonTypeFullName(selectedLesson?.type);
     const lessonTeacher = cleanTeacherName(selectedLesson?.teacher);
@@ -73,9 +79,7 @@ export const LessonDetailsModal = ({
                 )}
                 <View style={styles.bsRow}>
                     <Users size={20} color={theme.accent} />
-                    <Text style={styles.bsText}>
-                        {lessonGroup ? lessonGroup.name || lessonGroup.title : "Группа не указана"}
-                    </Text>
+                    <Text style={styles.bsText}>{lessonGroupName}</Text>
                 </View>
             </View>
         </BottomSheet>

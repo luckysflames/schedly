@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     View,
     Text,
@@ -8,19 +8,33 @@ import {
     FlatList,
     TouchableOpacity,
     Keyboard,
+    ActivityIndicator,
+    RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, GitCompare, Search, Star, X } from "lucide-react-native";
+import { ArrowLeft, GitCompare, Search, Star, User, Users, X } from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
+
+const PAGE_SIZE = 40;
 
 export const GroupSelectModal = ({
     visible,
     groups,
+    teachers = [],
+    isSearchingGroups = false,
+    isSearchingTeachers = false,
+    onRefreshGroups,
+    onRefreshTeachers,
     favoriteGroups,
+    favoriteTeachers = [],
     searchQuery,
+    teacherSearchQuery = "",
     onSearch,
+    onTeacherSearch,
     onSelectGroup,
+    onSelectTeacher,
     onToggleFavorite,
+    onToggleFavoriteTeacher,
     onClose,
     canCompare = false,
     comparisonMode = false,
@@ -31,16 +45,80 @@ export const GroupSelectModal = ({
     const styles = createStyles(createLocalStyles);
     const insets = useSafeAreaInsets();
 
-    const isFavorite = (group) =>
-        favoriteGroups.some(
-            (favoriteGroup) =>
-                String(favoriteGroup.id ?? favoriteGroup.name ?? favoriteGroup.title) ===
-                String(group.id ?? group.name ?? group.title),
-        );
+    // Состояние переключения между группами и преподавателями
+    const [activeTab, setActiveTab] = useState("groups"); // "groups" | "teachers"
+    const [isSwitchingMode, setIsSwitchingMode] = useState(false);
+    const [refreshingGroups, setRefreshingGroups] = useState(false);
+    const [refreshingTeachers, setRefreshingTeachers] = useState(false);
+    const [visibleGroupCount, setVisibleGroupCount] = useState(PAGE_SIZE);
+    const [visibleTeacherCount, setVisibleTeacherCount] = useState(PAGE_SIZE);
+
+    // Динамический заголовок в зависимости от активной вкладки
+        const currentTitle = comparisonMode
+                ? title
+                : activeTab === "teachers"
+                    ? "Выбор преподавателя"
+                    : title;
+
+    const getTeacherId = (teacher) =>
+        teacher?.id ??
+        teacher?.idTeacher ??
+        teacher?.teacherId ??
+        teacher?.teacherID ??
+        teacher?.кодПреподавателя ??
+        teacher?.код;
+    const getTeacherName = (teacher) =>
+        teacher?.name ?? teacher?.title ?? teacher?.fio ?? teacher?.ФИО ?? teacher?.teacher ?? "";
+    const isFavorite = (item, isTeacher = false) => {
+        const favorites = isTeacher ? favoriteTeachers : favoriteGroups;
+        const getKey = isTeacher
+            ? (value) => getTeacherId(value) ?? getTeacherName(value)
+            : (value) => value.id ?? value.name ?? value.title;
+        return favorites.some((favorite) => String(getKey(favorite)) === String(getKey(item)));
+    };
+
+    const handleCompare = () => {
+        if (isSwitchingMode) return;
+        setIsSwitchingMode(true);
+        requestAnimationFrame(() => {
+            onCompare?.();
+            setTimeout(() => setIsSwitchingMode(false), 350);
+        });
+    };
 
     const handleClose = () => {
         Keyboard.dismiss();
         onClose();
+    };
+
+    const handleRefreshGroups = async () => {
+        setRefreshingGroups(true);
+        setVisibleGroupCount(PAGE_SIZE);
+        try {
+            await onRefreshGroups?.();
+        } finally {
+            setRefreshingGroups(false);
+        }
+    };
+
+    const handleRefreshTeachers = async () => {
+        setRefreshingTeachers(true);
+        setVisibleTeacherCount(PAGE_SIZE);
+        try {
+            await onRefreshTeachers?.();
+        } finally {
+            setRefreshingTeachers(false);
+        }
+    };
+
+    const handleGroupSearch = (value) => {
+        setVisibleGroupCount(PAGE_SIZE);
+        onSearch(value);
+    };
+
+    const handleTeacherSearch = (value) => {
+        setVisibleTeacherCount(PAGE_SIZE);
+        onTeacherSearch?.(value);
     };
 
     return (
@@ -59,82 +137,276 @@ export const GroupSelectModal = ({
                     },
                 ]}
             >
+                {/* Шапка модалки */}
                 <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>{title}</Text>
+                    <Text style={styles.modalTitle}>{currentTitle}</Text>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <X size={24} color={theme.accent} />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Переключатель режимов: Группы / Преподаватели */}
+                <View style={styles.tabsContainer}>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === "groups" && styles.activeTab]}
+                        onPress={() => {
+                            setActiveTab("groups");
+                        }}
+                        activeOpacity={0.8}
+                    >
+                        <Users
+                            size={16}
+                            color={activeTab === "groups" ? theme.white : theme.accentMuted}
+                        />
+                        <Text
+                            style={[styles.tabText, activeTab === "groups" && styles.activeTabText]}
+                        >
+                            Группы
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === "teachers" && styles.activeTab]}
+                        onPress={() => setActiveTab("teachers")}
+                        activeOpacity={0.8}
+                    >
+                        <User
+                            size={16}
+                            color={activeTab === "teachers" ? theme.white : theme.accentMuted}
+                        />
+                        <Text
+                            style={[
+                                styles.tabText,
+                                activeTab === "teachers" && styles.activeTabText,
+                            ]}
+                        >
+                            Преподаватели
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
                 {canCompare && (
                     <TouchableOpacity
                         style={styles.compareButton}
-                        onPress={onCompare}
+                        onPress={handleCompare}
+                        disabled={isSwitchingMode}
                         activeOpacity={0.8}
                     >
-                        {comparisonMode ? (
+                        {isSwitchingMode ? (
+                            <ActivityIndicator size="small" color={theme.accent} />
+                        ) : comparisonMode ? (
                             <ArrowLeft size={18} color={theme.text} />
                         ) : (
                             <GitCompare size={18} color={theme.text} />
                         )}
                         <Text style={styles.compareButtonText}>
                             {comparisonMode
-                                ? "Вернуться к выбору группы"
-                                : "Сравнить с другой группой"}
+                                ? `Вернуться к выбору ${activeTab === "teachers" ? "преподавателя" : "группы"}`
+                                : activeTab === "teachers"
+                                  ? "Сравнить с преподавателем"
+                                  : "Сравнить с другой группой"}
                         </Text>
                     </TouchableOpacity>
                 )}
 
-                <View style={styles.searchBox}>
-                    <Search size={20} color={theme.accent} />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Например, МПИ11"
-                        placeholderTextColor={theme.accentMuted}
-                        value={searchQuery}
-                        onChangeText={onSearch}
-                        autoFocus={true}
-                    />
-                    {searchQuery ? (
-                        <TouchableOpacity onPress={() => onSearch("")} style={styles.clearButton}>
-                            <X size={18} color={theme.accent} />
-                        </TouchableOpacity>
-                    ) : null}
-                </View>
+                {/* Поиск в зависимости от активной вкладки */}
+                {activeTab === "groups" ? (
+                    <>
+                        <View style={styles.searchBox}>
+                            <Search size={20} color={theme.accent} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Например, МПИ11"
+                                placeholderTextColor={theme.accentMuted}
+                                value={searchQuery}
+                                onChangeText={handleGroupSearch}
+                                autoFocus={true}
+                            />
+                            {searchQuery ? (
+                                <TouchableOpacity
+                                    onPress={() => handleGroupSearch("")}
+                                    style={styles.clearButton}
+                                >
+                                    <X size={18} color={theme.accent} />
+                                </TouchableOpacity>
+                            ) : null}
+                            {isSearchingGroups && (
+                                <ActivityIndicator size="small" color={theme.accent} />
+                            )}
+                        </View>
 
-                <FlatList
-                    data={groups}
-                    keyExtractor={(item, index) => item.id?.toString() || index.toString()}
-                    keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={styles.listContent}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.groupItem}
-                            onPress={() => {
-                                Keyboard.dismiss();
-                                onSelectGroup(item);
-                            }}
-                        >
-                            <Text style={styles.groupItemText}>{item.name || item.title}</Text>
-                            <TouchableOpacity
-                                style={styles.favoriteButton}
-                                onPress={() => onToggleFavorite(item)}
-                                accessibilityRole="button"
-                                accessibilityLabel={
-                                    isFavorite(item)
-                                        ? "Убрать группу из избранного"
-                                        : "Добавить группу в избранное"
+                        <FlatList
+                                data={groups.slice(0, visibleGroupCount)}
+                                keyExtractor={(item, index) =>
+                                    item.id?.toString() || index.toString()
                                 }
-                            >
-                                <Star
-                                    size={21}
-                                    color={theme.accent}
-                                    fill={isFavorite(item) ? theme.accent : "transparent"}
-                                />
-                            </TouchableOpacity>
-                        </TouchableOpacity>
-                    )}
-                />
+                                keyboardShouldPersistTaps="handled"
+                                contentContainerStyle={styles.listContent}
+                                refreshControl={
+                                    <RefreshControl
+                                        refreshing={refreshingGroups}
+                                        onRefresh={handleRefreshGroups}
+                                        progressBackgroundColor={theme.main}
+                                        colors={[theme.accentMuted, theme.accent]}
+                                    />
+                                }
+                                onEndReached={() => {
+                                    if (visibleGroupCount < groups.length) {
+                                        setVisibleGroupCount((count) =>
+                                            Math.min(count + PAGE_SIZE, groups.length),
+                                        );
+                                    }
+                                }}
+                                onEndReachedThreshold={0.5}
+                                ListEmptyComponent={
+                                    isSearchingGroups ? (
+                                        <ActivityIndicator
+                                            style={styles.emptyLoader}
+                                            size="small"
+                                            color={theme.accent}
+                                        />
+                                    ) : (
+                                        <Text style={styles.emptyText}>
+                                            {searchQuery
+                                                ? "Группы не найдены"
+                                                : "Список групп пуст"}
+                                        </Text>
+                                    )
+                                }
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.groupItem}
+                                        onPress={() => {
+                                            Keyboard.dismiss();
+                                            onSelectGroup(item);
+                                        }}
+                                    >
+                                        <Text style={styles.groupItemText}>
+                                            {item.name || item.title}
+                                        </Text>
+                                        <TouchableOpacity
+                                            style={styles.favoriteButton}
+                                            onPress={() => onToggleFavorite(item)}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={
+                                                isFavorite(item)
+                                                    ? "Убрать группу из избранного"
+                                                    : "Добавить группу в избранное"
+                                            }
+                                        >
+                                            <Star
+                                                size={21}
+                                                color={theme.accent}
+                                                fill={
+                                                    isFavorite(item)
+                                                        ? theme.accent
+                                                        : "transparent"
+                                                }
+                                            />
+                                        </TouchableOpacity>
+                                    </TouchableOpacity>
+                                )}
+                            />
+                    </>
+                ) : (
+                    <>
+                        <View style={styles.searchBox}>
+                            <Search size={20} color={theme.accent} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="ФИО преподавателя..."
+                                placeholderTextColor={theme.accentMuted}
+                                value={teacherSearchQuery}
+                                onChangeText={handleTeacherSearch}
+                                autoFocus={true}
+                            />
+                            {teacherSearchQuery ? (
+                                <TouchableOpacity
+                                    onPress={() => handleTeacherSearch("")}
+                                    style={styles.clearButton}
+                                >
+                                    <X size={18} color={theme.accent} />
+                                </TouchableOpacity>
+                            ) : null}
+                            {isSearchingTeachers && (
+                                <ActivityIndicator size="small" color={theme.accent} />
+                            )}
+                        </View>
+
+                        <FlatList
+                                data={teachers.slice(0, visibleTeacherCount)}
+                                keyExtractor={(item, index) =>
+                                    String(getTeacherId(item) ?? getTeacherName(item) ?? index)
+                                }
+                                keyboardShouldPersistTaps="handled"
+                                contentContainerStyle={styles.listContent}
+                                refreshControl={
+                                    <RefreshControl
+                                        refreshing={refreshingTeachers}
+                                        onRefresh={handleRefreshTeachers}
+                                        progressBackgroundColor={theme.main}
+                                        colors={[theme.accentMuted, theme.accent]}
+                                    />
+                                }
+                                onEndReached={() => {
+                                    if (visibleTeacherCount < teachers.length) {
+                                        setVisibleTeacherCount((count) =>
+                                            Math.min(count + PAGE_SIZE, teachers.length),
+                                        );
+                                    }
+                                }}
+                                onEndReachedThreshold={0.5}
+                                ListEmptyComponent={
+                                    isSearchingTeachers ? (
+                                        <ActivityIndicator
+                                            style={styles.emptyLoader}
+                                            size="small"
+                                            color={theme.accent}
+                                        />
+                                    ) : (
+                                        <Text style={styles.emptyText}>
+                                            {teacherSearchQuery
+                                                ? "Преподаватели не найдены"
+                                                : "Список преподавателей пуст"}
+                                        </Text>
+                                    )
+                                }
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.groupItem}
+                                        onPress={() => {
+                                            Keyboard.dismiss();
+                                            onSelectTeacher(item);
+                                        }}
+                                    >
+                                        <Text style={styles.groupItemText}>
+                                            {getTeacherName(item) || "Преподаватель"}
+                                        </Text>
+                                        <TouchableOpacity
+                                            style={styles.favoriteButton}
+                                            onPress={() => onToggleFavoriteTeacher(item)}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={
+                                                isFavorite(item, true)
+                                                    ? "Убрать преподавателя из избранного"
+                                                    : "Добавить преподавателя в избранное"
+                                            }
+                                        >
+                                            <Star
+                                                size={21}
+                                                color={theme.accent}
+                                                fill={
+                                                    isFavorite(item, true)
+                                                        ? theme.accent
+                                                        : "transparent"
+                                                }
+                                            />
+                                        </TouchableOpacity>
+                                    </TouchableOpacity>
+                                )}
+                            />
+                    </>
+                )}
             </View>
         </Modal>
     );
@@ -151,7 +423,7 @@ const createLocalStyles = (theme) =>
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 16,
+            marginBottom: 12,
             marginTop: 10,
         },
         modalTitle: {
@@ -162,6 +434,34 @@ const createLocalStyles = (theme) =>
         closeButton: {
             padding: 4,
         },
+        /* Стили для табов переключения */
+        tabsContainer: {
+            flexDirection: "row",
+            backgroundColor: theme.dark,
+            borderRadius: 12,
+            padding: 4,
+            marginBottom: 12,
+        },
+        tab: {
+            flex: 1,
+            flexDirection: "row",
+            alignItem: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingVertical: 10,
+            borderRadius: 10,
+        },
+        activeTab: {
+            backgroundColor: theme.accent,
+        },
+        tabText: {
+            color: theme.accentMuted,
+            fontSize: 14,
+            fontWeight: "600",
+        },
+        activeTabText: {
+            color: theme.white,
+        },
         compareButton: {
             minHeight: 44,
             flexDirection: "row",
@@ -171,10 +471,12 @@ const createLocalStyles = (theme) =>
             paddingHorizontal: 12,
             marginBottom: 12,
             borderRadius: 10,
-            backgroundColor: theme.accent,
+            backgroundColor: theme.dark,
+            borderWidth: 1,
+            borderColor: theme.accent,
         },
         compareButtonText: {
-            color: theme.text,
+            color: theme.white,
             fontSize: 14,
             fontWeight: "600",
         },
@@ -215,5 +517,19 @@ const createLocalStyles = (theme) =>
         favoriteButton: {
             padding: 6,
             marginLeft: 12,
+        },
+        emptyText: {
+            paddingVertical: 28,
+            color: theme.accentMuted,
+            fontSize: 14,
+            textAlign: "center",
+        },
+        emptyLoader: {
+            marginTop: 28,
+        },
+        listLoader: {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
         },
     });

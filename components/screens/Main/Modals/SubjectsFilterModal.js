@@ -13,6 +13,7 @@ import { Check, X, LayoutGrid, Clock, Calendar, Scroll } from "lucide-react-nati
 import { useTheme } from "../../../../hooks/useTheme";
 import { normalizeScheduleData } from "../../../../utils/normalizeScheduleData";
 import { getSubjectFilterKey } from "../../../../utils/subjectFilter";
+import { getTeacherShortName } from "../../../../utils/lessonFormatters";
 import { useSchedlyStore } from "../../../../store/useSchedlyStore";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -27,6 +28,7 @@ export const SubjectsFilterModal = ({
     currentView,
     onChangeView,
     comparisonMode = false,
+    comparisonTeacher = false,
     selectedGroup,
     comparisonGroup,
 }) => {
@@ -107,8 +109,16 @@ export const SubjectsFilterModal = ({
                           (isLecture ? theme.main : theme.accentMuted);
                     const groupName =
                         lesson.comparisonGroup === "second"
-                            ? comparisonGroup?.name || comparisonGroup?.title
-                            : selectedGroup?.name || selectedGroup?.title;
+                                                        ? comparisonTeacher
+                                                                ? getTeacherShortName(
+                                                                            comparisonGroup?.name ||
+                                                                                    comparisonGroup?.title ||
+                                                                                    comparisonGroup?.fio,
+                                                                    )
+                                                                : comparisonGroup?.name ||
+                                                                    comparisonGroup?.title ||
+                                                                    comparisonGroup?.fio
+                            : selectedGroup?.name || selectedGroup?.title || selectedGroup?.fio;
                     const displayName =
                         comparisonMode && groupName
                             ? `${subjectName} (${groupName})`
@@ -129,6 +139,7 @@ export const SubjectsFilterModal = ({
         customSubjectColors,
         theme,
         comparisonMode,
+        comparisonTeacher,
         selectedGroup,
         comparisonGroup,
     ]);

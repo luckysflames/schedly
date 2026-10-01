@@ -71,6 +71,28 @@ export const cleanTeacherName = (teacherInput) => {
     return cleanedParts.join(", ");
 };
 
+export const getTeacherShortName = (teacherInput) => {
+    const cleanedName = cleanTeacherName(teacherInput);
+    if (!cleanedName) return null;
+
+    return cleanedName
+        .split(",")
+        .map((teacher) => {
+            const [surname, ...nameParts] = teacher.trim().split(/\s+/);
+            if (!nameParts.length) return surname;
+
+            const initials = nameParts
+                .map((part) => {
+                    if (/^[А-ЯЁ]\.?$/i.test(part)) return `${part.replace(/\.$/, "")}.`;
+                    return `${part.charAt(0).toLocaleUpperCase("ru-RU").replace(/\.$/, "")}.`;
+                })
+                .join(" ");
+
+            return `${surname} ${initials}`;
+        })
+        .join(", ");
+};
+
 export const isLessonPast = (lessonTime, lessonDateObj) => {
     if (!lessonTime || !lessonDateObj) return false;
 
