@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useDeferredValue, useEffect, useRef, useState } from "react";
 import {
     View,
     Text,
@@ -19,10 +19,9 @@ const PAGE_SIZE = 40;
 
 export const GroupSelectModal = ({
     visible,
-    groups,
-    teachers = [],
-    isSearchingGroups = false,
-    isSearchingTeachers = false,
+    loadGroupsPage,
+    loadTeachersPage,
+    excludedGroupKey,
     onRefreshGroups,
     onRefreshTeachers,
     favoriteGroups,
@@ -50,8 +49,19 @@ export const GroupSelectModal = ({
     const [isSwitchingMode, setIsSwitchingMode] = useState(false);
     const [refreshingGroups, setRefreshingGroups] = useState(false);
     const [refreshingTeachers, setRefreshingTeachers] = useState(false);
-    const [visibleGroupCount, setVisibleGroupCount] = useState(PAGE_SIZE);
-    const [visibleTeacherCount, setVisibleTeacherCount] = useState(PAGE_SIZE);
+    const [groupItems, setGroupItems] = useState([]);
+    const [teacherItems, setTeacherItems] = useState([]);
+    const [groupLoading, setGroupLoading] = useState(false);
+    const [teacherLoading, setTeacherLoading] = useState(false);
+    const [groupHasMore, setGroupHasMore] = useState(false);
+    const [teacherHasMore, setTeacherHasMore] = useState(false);
+    const [groupError, setGroupError] = useState(false);
+    const [teacherError, setTeacherError] = useState(false);
+    const deferredGroupQuery = useDeferredValue(searchQuery);
+    const deferredTeacherQuery = useDeferredValue(teacherSearchQuery);
+    const requestSequence = useRef(0);
+    const groupLoadingRef = useRef(false);
+    const teacherLoadingRef = useRef(false);
 
     // Динамический заголовок в зависимости от активной вкладки
         const currentTitle = comparisonMode
@@ -69,6 +79,130 @@ export const GroupSelectModal = ({
         teacher?.код;
     const getTeacherName = (teacher) =>
         teacher?.name ?? teacher?.title ?? teacher?.fio ?? teacher?.ФИО ?? teacher?.teacher ?? "";
+
+    useEffect(() => {
+        if (!visible) return undefined;
+
+        let isCurrent = true;
+        const sequence = ++requestSequence.current;
+        const isGroupTab = activeTab === "groups";
+        const loadPage = isGroupTab ? loadGroupsPage : loadTeachersPage;
+        const query = isGroupTab ? deferredGroupQuery : deferredTeacherQuery;
+
+        if (isGroupTab) {
+            setGroupItems([]);
+            setGroupHasMore(false);
+            setGroupError(false);
+            setGroupLoading(true);
+            groupLoadingRef.current = true;
+        } else {
+            setTeacherItems([]);
+            setTeacherHasMore(false);
+            setTeacherError(false);
+            setTeacherLoading(true);
+            teacherLoadingRef.current = true;
+        }
+
+        loadPage(
+            query,
+            0,
+            PAGE_SIZE,
+            isGroupTab ? excludedGroupKey : null,
+        )
+            .then((page) => {
+                if (!isCurrent || sequence !== requestSequence.current) return;
+                if (isGroupTab) {
+                    setGroupItems(page.items);
+                    setGroupHasMore(page.hasMore);
+                } else {
+                    setTeacherItems(page.items);
+                    setTeacherHasMore(page.hasMore);
+                }
+            })
+            .catch((error) => {
+                console.error("Offline catalog read error:", error);
+                if (!isCurrent || sequence !== requestSequence.current) return;
+                if (isGroupTab) setGroupError(true);
+                else setTeacherError(true);
+            })
+            .finally(() => {
+                if (!isCurrent || sequence !== requestSequence.current) return;
+                if (isGroupTab) {
+                    setGroupLoading(false);
+                    groupLoadingRef.current = false;
+                } else {
+                    setTeacherLoading(false);
+                    teacherLoadingRef.current = false;
+                }
+            });
+
+        return () => {
+            isCurrent = false;
+            if (isGroupTab) groupLoadingRef.current = false;
+            else teacherLoadingRef.current = false;
+        };
+    }, [
+        activeTab,
+        deferredGroupQuery,
+        deferredTeacherQuery,
+        excludedGroupKey,
+        favoriteGroups,
+        favoriteTeachers,
+        loadGroupsPage,
+        loadTeachersPage,
+        visible,
+    ]);
+
+    const loadMoreGroups = async () => {
+        if (!groupHasMore || groupLoadingRef.current) return;
+        const sequence = ++requestSequence.current;
+        groupLoadingRef.current = true;
+        setGroupLoading(true);
+        try {
+            const page = await loadGroupsPage(
+                deferredGroupQuery,
+                groupItems.length,
+                PAGE_SIZE,
+                excludedGroupKey,
+            );
+            if (sequence !== requestSequence.current) return;
+            setGroupItems((current) => [...current, ...page.items]);
+            setGroupHasMore(page.hasMore);
+        } catch (error) {
+            console.error("Offline group page read error:", error);
+            if (sequence === requestSequence.current) setGroupError(true);
+        } finally {
+            if (sequence === requestSequence.current) {
+                groupLoadingRef.current = false;
+                setGroupLoading(false);
+            }
+        }
+    };
+
+    const loadMoreTeachers = async () => {
+        if (!teacherHasMore || teacherLoadingRef.current) return;
+        const sequence = ++requestSequence.current;
+        teacherLoadingRef.current = true;
+        setTeacherLoading(true);
+        try {
+            const page = await loadTeachersPage(
+                deferredTeacherQuery,
+                teacherItems.length,
+                PAGE_SIZE,
+            );
+            if (sequence !== requestSequence.current) return;
+            setTeacherItems((current) => [...current, ...page.items]);
+            setTeacherHasMore(page.hasMore);
+        } catch (error) {
+            console.error("Offline teacher page read error:", error);
+            if (sequence === requestSequence.current) setTeacherError(true);
+        } finally {
+            if (sequence === requestSequence.current) {
+                teacherLoadingRef.current = false;
+                setTeacherLoading(false);
+            }
+        }
+    };
     const isFavorite = (item, isTeacher = false) => {
         const favorites = isTeacher ? favoriteTeachers : favoriteGroups;
         const getKey = isTeacher
@@ -92,32 +226,57 @@ export const GroupSelectModal = ({
     };
 
     const handleRefreshGroups = async () => {
+        const sequence = ++requestSequence.current;
         setRefreshingGroups(true);
-        setVisibleGroupCount(PAGE_SIZE);
         try {
             await onRefreshGroups?.();
+            if (sequence !== requestSequence.current) return;
+            const page = await loadGroupsPage(
+                deferredGroupQuery,
+                0,
+                PAGE_SIZE,
+                excludedGroupKey,
+            );
+            if (sequence !== requestSequence.current) return;
+            setGroupItems(page.items);
+            setGroupHasMore(page.hasMore);
+            setGroupError(false);
+        } catch (error) {
+            console.error("Offline group refresh error:", error);
+            if (sequence === requestSequence.current) setGroupError(true);
         } finally {
             setRefreshingGroups(false);
         }
     };
 
     const handleRefreshTeachers = async () => {
+        const sequence = ++requestSequence.current;
         setRefreshingTeachers(true);
-        setVisibleTeacherCount(PAGE_SIZE);
         try {
             await onRefreshTeachers?.();
+            if (sequence !== requestSequence.current) return;
+            const page = await loadTeachersPage(
+                deferredTeacherQuery,
+                0,
+                PAGE_SIZE,
+            );
+            if (sequence !== requestSequence.current) return;
+            setTeacherItems(page.items);
+            setTeacherHasMore(page.hasMore);
+            setTeacherError(false);
+        } catch (error) {
+            console.error("Offline teacher refresh error:", error);
+            if (sequence === requestSequence.current) setTeacherError(true);
         } finally {
             setRefreshingTeachers(false);
         }
     };
 
     const handleGroupSearch = (value) => {
-        setVisibleGroupCount(PAGE_SIZE);
         onSearch(value);
     };
 
     const handleTeacherSearch = (value) => {
-        setVisibleTeacherCount(PAGE_SIZE);
         onTeacherSearch?.(value);
     };
 
@@ -230,13 +389,13 @@ export const GroupSelectModal = ({
                                     <X size={18} color={theme.accent} />
                                 </TouchableOpacity>
                             ) : null}
-                            {isSearchingGroups && (
+                            {groupLoading && (
                                 <ActivityIndicator size="small" color={theme.accent} />
                             )}
                         </View>
 
                         <FlatList
-                                data={groups.slice(0, visibleGroupCount)}
+                                data={groupItems}
                                 keyExtractor={(item, index) =>
                                     item.id?.toString() || index.toString()
                                 }
@@ -251,15 +410,11 @@ export const GroupSelectModal = ({
                                     />
                                 }
                                 onEndReached={() => {
-                                    if (visibleGroupCount < groups.length) {
-                                        setVisibleGroupCount((count) =>
-                                            Math.min(count + PAGE_SIZE, groups.length),
-                                        );
-                                    }
+                                    loadMoreGroups();
                                 }}
                                 onEndReachedThreshold={0.5}
                                 ListEmptyComponent={
-                                    isSearchingGroups ? (
+                                    groupLoading ? (
                                         <ActivityIndicator
                                             style={styles.emptyLoader}
                                             size="small"
@@ -267,7 +422,9 @@ export const GroupSelectModal = ({
                                         />
                                     ) : (
                                         <Text style={styles.emptyText}>
-                                            {searchQuery
+                                            {groupError
+                                                ? "Не удалось прочитать сохранённый список"
+                                                : searchQuery
                                                 ? "Группы не найдены"
                                                 : "Список групп пуст"}
                                         </Text>
@@ -328,13 +485,13 @@ export const GroupSelectModal = ({
                                     <X size={18} color={theme.accent} />
                                 </TouchableOpacity>
                             ) : null}
-                            {isSearchingTeachers && (
+                            {teacherLoading && (
                                 <ActivityIndicator size="small" color={theme.accent} />
                             )}
                         </View>
 
                         <FlatList
-                                data={teachers.slice(0, visibleTeacherCount)}
+                                data={teacherItems}
                                 keyExtractor={(item, index) =>
                                     String(getTeacherId(item) ?? getTeacherName(item) ?? index)
                                 }
@@ -349,15 +506,11 @@ export const GroupSelectModal = ({
                                     />
                                 }
                                 onEndReached={() => {
-                                    if (visibleTeacherCount < teachers.length) {
-                                        setVisibleTeacherCount((count) =>
-                                            Math.min(count + PAGE_SIZE, teachers.length),
-                                        );
-                                    }
+                                    loadMoreTeachers();
                                 }}
                                 onEndReachedThreshold={0.5}
                                 ListEmptyComponent={
-                                    isSearchingTeachers ? (
+                                    teacherLoading ? (
                                         <ActivityIndicator
                                             style={styles.emptyLoader}
                                             size="small"
@@ -365,7 +518,9 @@ export const GroupSelectModal = ({
                                         />
                                     ) : (
                                         <Text style={styles.emptyText}>
-                                            {teacherSearchQuery
+                                            {teacherError
+                                                ? "Не удалось прочитать сохранённый список"
+                                                : teacherSearchQuery
                                                 ? "Преподаватели не найдены"
                                                 : "Список преподавателей пуст"}
                                         </Text>

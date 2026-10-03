@@ -19,6 +19,7 @@ export default function MainScreen() {
     const styles = createStyles(createLocalStyles);
     const [isGroupModalRequested, setIsGroupModalRequested] = useState(false);
     const {
+        isStoreHydrated,
         selectedGroup,
         selectedTeacher,
         selectedSchedule,
@@ -27,8 +28,6 @@ export default function MainScreen() {
         comparisonScheduleData,
         isComparisonLoading,
         isTeacherLoading,
-        isSearchingGroups,
-        isSearchingTeachers,
         favoriteGroups,
         favoriteTeachers,
         scheduleData,
@@ -37,8 +36,6 @@ export default function MainScreen() {
         currentView,
         currentOffset,
         modals,
-        groups,
-        teachers,
         searchQuery,
         teacherSearchQuery,
         selectedLesson,
@@ -50,6 +47,8 @@ export default function MainScreen() {
         setCurrentOffset,
         loadGroups,
         loadTeachers,
+        loadGroupsPage,
+        loadTeachersPage,
         setSelectedGroup,
         selectGroup,
         selectTeacher,
@@ -82,7 +81,7 @@ export default function MainScreen() {
     };
 
     const renderMainContent = () => {
-        if (isLoading || isComparisonLoading || isTeacherLoading) {
+        if (!isStoreHydrated || isLoading || isComparisonLoading || isTeacherLoading) {
             return (
                 <View style={styles.center}>
                     <ActivityIndicator size="large" color={theme.accent} />
@@ -211,16 +210,9 @@ export default function MainScreen() {
 
             <GroupSelectModal
                 visible={isGroupModalRequested && (modals.group || modals.comparisonGroup)}
-                groups={
-                    modals.comparisonGroup
-                        ? groups.filter(
-                              (group) => String(group.id) !== String(selectedGroup?.id),
-                          )
-                        : groups
-                }
-                teachers={teachers}
-                isSearchingGroups={isSearchingGroups}
-                isSearchingTeachers={isSearchingTeachers}
+                loadGroupsPage={loadGroupsPage}
+                loadTeachersPage={loadTeachersPage}
+                excludedGroupKey={modals.comparisonGroup ? selectedGroup?.id : null}
                 onRefreshGroups={loadGroups}
                 onRefreshTeachers={loadTeachers}
                 favoriteGroups={favoriteGroups}

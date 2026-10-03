@@ -16,8 +16,6 @@ const initialState = {
     showScheduleUpdateModal: true,
     themeName: DEFAULT_THEME_NAME,
     selectedGroup: null,
-    groups: [],
-    teachers: [],
     favoriteGroups: [],
     favoriteTeachers: [],
     scheduleData: null,
@@ -133,16 +131,6 @@ export const useSchedlyStore = create(
                             ? scheduleLoadResult
                             : null,
                     }),
-                setGroupsIfChanged: (groups) => {
-                    if (JSON.stringify(get().groups) !== JSON.stringify(groups)) {
-                        set({ groups });
-                    }
-                },
-                setTeachersIfChanged: (teachers) => {
-                    if (JSON.stringify(get().teachers) !== JSON.stringify(teachers)) {
-                        set({ teachers });
-                    }
-                },
                 setCurrentView: (currentView) => set({ currentView }),
                 setIsViewChanging: (isViewChanging) => set({ isViewChanging }),
 
@@ -323,6 +311,8 @@ export const useSchedlyStore = create(
                     scheduleLoadResult,
                     isViewChanging,
                     isAuthLoading,
+                    groups,
+                    teachers,
                     ...rest
                 } = state;
                 return rest;

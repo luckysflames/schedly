@@ -2,8 +2,6 @@ import {
     useState,
     useEffect,
     useCallback,
-    useMemo,
-    useDeferredValue,
     useRef,
 } from "react";
 import { Vibration } from "react-native";
@@ -16,22 +14,20 @@ import {
     fetchTeacherScheduleByDate,
 } from "../utils/api";
 import { compareScheduleData } from "../utils/compareScheduleData";
+import { getCatalogPage, saveCatalog } from "../utils/catalogStorage";
 import { useTheme } from "./useTheme";
 
 export const useMainScreen = () => {
     const { theme } = useTheme();
     const {
+        _hasHydrated,
         selectedGroup,
         favoriteGroups,
         favoriteTeachers,
-        groups,
-        teachers,
         scheduleData,
         scheduleLoadResult,
         showScheduleUpdateModal,
         setScheduleLoadResult,
-        setGroupsIfChanged,
-        setTeachersIfChanged,
         isLoading,
         setSelectedGroup,
         toggleFavoriteGroup,
@@ -73,8 +69,6 @@ export const useMainScreen = () => {
     // Локальные данные
     const [searchQuery, setSearchQuery] = useState("");
     const [teacherSearchQuery, setTeacherSearchQuery] = useState("");
-    const deferredSearchQuery = useDeferredValue(searchQuery);
-    const deferredTeacherSearchQuery = useDeferredValue(teacherSearchQuery);
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [refreshResult, setLocalRefreshResult] = useState(null);
     const [subjectForColorChange, setSubjectForColorChange] = useState(null);
@@ -120,63 +114,30 @@ export const useMainScreen = () => {
         );
     }, [theme.accent, theme.textDark]);
 
-    const getGroupKey = (group) => group.id ?? group.name ?? group.title;
-
-    const groupOptions = useMemo(() => {
-        const groupsByKey = new Map();
-        groups.forEach((group) => {
-            const key = String(getGroupKey(group));
-            if (!groupsByKey.has(key)) groupsByKey.set(key, group);
-        });
-
-        return [...groupsByKey.entries()].map(([key, group]) => ({
-            key,
-            group,
-            searchName: String(group.name || group.title || "").toLocaleLowerCase("ru-RU"),
-        }));
-    }, [groups]);
-
-    const visibleGroups = useMemo(() => {
-        const normalizedQuery = deferredSearchQuery.trim().toLocaleLowerCase("ru-RU");
-        const favoriteKeys = new Set(favoriteGroups.map((group) => String(getGroupKey(group))));
-        const matchingFavorites = favoriteGroups.filter((group) =>
-            String(group.name || group.title || "")
-                .toLocaleLowerCase("ru-RU")
-                .includes(normalizedQuery),
-        );
-        const matchingGroups = groupOptions
-            .filter(
-                (option) =>
-                    !favoriteKeys.has(option.key) && option.searchName.includes(normalizedQuery),
-            )
-            .map((option) => option.group);
-
-        return [...matchingFavorites, ...matchingGroups];
-    }, [deferredSearchQuery, favoriteGroups, groupOptions]);
-
     const loadGroups = useCallback(() => {
         if (groupListRequest.current) return groupListRequest.current;
 
         groupListRequest.current = fetchGroupList()
-            .then((data) => {
+            .then(async (data) => {
                 const list = Array.isArray(data)
                     ? data
                     : Array.isArray(data?.groups)
                       ? data.groups
                       : null;
-                if (list) setGroupsIfChanged(list);
+                if (list) await saveCatalog("groups", list);
+                return list;
             })
             .finally(() => {
                 groupListRequest.current = null;
             });
         return groupListRequest.current;
-    }, [setGroupsIfChanged]);
+    }, []);
 
     const loadTeachers = useCallback(() => {
         if (teacherListRequest.current) return teacherListRequest.current;
 
         teacherListRequest.current = fetchTeacherList()
-            .then((data) => {
+            .then(async (data) => {
                                 const list = Array.isArray(data)
                                         ? data
                                         : Array.isArray(data?.teachers)
@@ -184,13 +145,39 @@ export const useMainScreen = () => {
                                             : Array.isArray(data?.items)
                                                 ? data.items
                                                 : null;
-                                if (list) setTeachersIfChanged(list);
+                                if (list) await saveCatalog("teachers", list);
+                                return list;
             })
             .finally(() => {
                 teacherListRequest.current = null;
             });
         return teacherListRequest.current;
-    }, [setTeachersIfChanged]);
+    }, []);
+
+    const loadGroupsPage = useCallback(
+        (query, offset, limit, excludedKey) =>
+            getCatalogPage({
+                catalog: "groups",
+                query,
+                offset,
+                limit,
+                favoriteItems: favoriteGroups,
+                excludedKey,
+            }),
+        [favoriteGroups],
+    );
+
+    const loadTeachersPage = useCallback(
+        (query, offset, limit) =>
+            getCatalogPage({
+                catalog: "teachers",
+                query,
+                offset,
+                limit,
+                favoriteItems: favoriteTeachers,
+            }),
+        [favoriteTeachers],
+    );
 
     // Обработчик поиска
     const handleSearch = (text) => {
@@ -206,43 +193,6 @@ export const useMainScreen = () => {
         teacher?.код;
     const getTeacherName = (teacher) =>
         teacher?.name ?? teacher?.title ?? teacher?.fio ?? teacher?.ФИО ?? teacher?.teacher ?? "";
-
-    const teacherOptions = useMemo(() => {
-        const getTeacherKey = (teacher) => getTeacherId(teacher) ?? getTeacherName(teacher);
-        const teachersByKey = new Map();
-
-        teachers.forEach((teacher) => {
-            const key = String(getTeacherKey(teacher));
-            if (!teachersByKey.has(key)) teachersByKey.set(key, teacher);
-        });
-
-        return [...teachersByKey.entries()].map(([key, teacher]) => ({
-            key,
-            teacher,
-            searchName: String(getTeacherName(teacher)).toLocaleLowerCase("ru-RU"),
-        }));
-    }, [teachers]);
-
-    const visibleTeachers = useMemo(() => {
-        const normalizedQuery = deferredTeacherSearchQuery
-            .trim()
-            .toLocaleLowerCase("ru-RU");
-        const getTeacherKey = (teacher) => getTeacherId(teacher) ?? getTeacherName(teacher);
-        const favoriteKeys = new Set(
-            favoriteTeachers.map((teacher) => String(getTeacherKey(teacher))),
-        );
-        const matchingFavorites = favoriteTeachers.filter((teacher) =>
-            String(getTeacherName(teacher)).toLocaleLowerCase("ru-RU").includes(normalizedQuery),
-        );
-        const matchingTeachers = teacherOptions
-            .filter(
-                (option) =>
-                    !favoriteKeys.has(option.key) && option.searchName.includes(normalizedQuery),
-            )
-            .map((option) => option.teacher);
-
-        return [...matchingFavorites, ...matchingTeachers];
-    }, [deferredTeacherSearchQuery, favoriteTeachers, teacherOptions]);
 
     const loadTeacherSchedule = useCallback(async (teacherId) => {
         const cacheKey = String(teacherId);
@@ -423,6 +373,7 @@ export const useMainScreen = () => {
     return {
         // Стейты
         selectedGroup,
+        isStoreHydrated: _hasHydrated,
         selectedTeacher,
         selectedSchedule: selectedTeacher || selectedGroup,
         comparisonGroup,
@@ -430,8 +381,6 @@ export const useMainScreen = () => {
         comparisonScheduleData,
         isComparisonLoading,
         isTeacherLoading,
-        isSearchingGroups: searchQuery !== deferredSearchQuery,
-        isSearchingTeachers: teacherSearchQuery !== deferredTeacherSearchQuery,
         favoriteGroups,
         favoriteTeachers,
         scheduleData,
@@ -440,8 +389,6 @@ export const useMainScreen = () => {
         currentView,
         currentOffset,
         modals,
-        groups: visibleGroups,
-        teachers: visibleTeachers,
         searchQuery,
         teacherSearchQuery,
         selectedLesson,
@@ -455,6 +402,8 @@ export const useMainScreen = () => {
         setCurrentOffset,
         loadGroups,
         loadTeachers,
+        loadGroupsPage,
+        loadTeachersPage,
         setSelectedGroup,
         selectGroup,
         selectTeacher,
