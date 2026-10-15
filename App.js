@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import { StyleSheet, AppState } from "react-native";
@@ -10,10 +10,14 @@ import { createStackNavigator } from "@react-navigation/stack";
 import MyCustomTabBar from "./components/layout/TabBar/MyCustomTabBar";
 import MainScreen from "./screens/MainScreen";
 import SettingsScreen from "./screens/SettingsScreen";
-
-import { useTheme } from "./hooks/useTheme";
 import ProfileScreen from "./screens/ProfileScreen";
 import PassScreen from "./screens/PassScreen";
+
+import { useTheme } from "./hooks/useTheme";
+import { SnowEffect } from "./components/effects/SnowEffect";
+import { LeafEffect } from "./components/effects/LeafEffect";
+import { SpringEffect } from "./components/effects/SpringEffect";
+import { useSchedlyStore } from "./store/useSchedlyStore";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -66,6 +70,16 @@ function HomeTabs() {
 
 export default function App() {
     const { theme } = useTheme();
+    const showSeasonalEffects = useSchedlyStore((state) => state.showSeasonalEffects);
+    const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
+    const SeasonalEffect =
+        currentMonth >= 2 && currentMonth <= 4
+            ? SpringEffect
+            : currentMonth >= 8 && currentMonth <= 10
+              ? LeafEffect
+              : currentMonth === 11 || currentMonth <= 1
+                ? SnowEffect
+                : null;
 
     const currentMainColor = theme?.dark || FALLBACK_MAIN_COLOR;
     const currentAccentColor = theme?.accent || "#ffffff";
@@ -117,6 +131,7 @@ export default function App() {
 
         const appStateSubscription = AppState.addEventListener("change", (nextAppState) => {
             if (nextAppState === "active") {
+                setCurrentMonth(new Date().getMonth());
                 configureNavBar();
             }
         });
@@ -140,6 +155,8 @@ export default function App() {
                         <Stack.Screen name="MainTabs" component={HomeTabs} />
                     </Stack.Navigator>
                 </NavigationContainer>
+
+                {showSeasonalEffects && SeasonalEffect && <SeasonalEffect />}
             </SafeAreaView>
         </SafeAreaProvider>
     );

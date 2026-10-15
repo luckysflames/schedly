@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity } from "react-native";
-import { Bell, Bug, Palette, Users, LogOut } from "lucide-react-native";
+import { Bell, Bug, Palette, Users, LogOut, Sparkles } from "lucide-react-native";
 import Constants from "expo-constants";
 
 import { useSchedlyStore } from "../store/useSchedlyStore";
@@ -25,6 +25,8 @@ export default function SettingsScreen({ navigation }) {
     const setShowScheduleUpdateModal = useSchedlyStore(
         (state) => state.setShowScheduleUpdateModal,
     );
+    const showSeasonalEffects = useSchedlyStore((state) => state.showSeasonalEffects);
+    const setShowSeasonalEffects = useSchedlyStore((state) => state.setShowSeasonalEffects);
     const [isDevModalVisible, setDevModalVisible] = useState(false);
     const [isThemeModalVisible, setThemeModalVisible] = useState(false);
 
@@ -62,6 +64,13 @@ export default function SettingsScreen({ navigation }) {
                     type="switch"
                     value={showScheduleUpdateModal}
                     onValueChange={setShowScheduleUpdateModal}
+                />
+                <SettingItem
+                    icon={Sparkles}
+                    label="Дико чувствовать"
+                    type="switch"
+                    value={showSeasonalEffects}
+                    onValueChange={setShowSeasonalEffects}
                 />
                 <Text style={styles.sectionTitle}>Поддержка и связь</Text>
                 <SettingItem icon={Bug} label="Сообщить об ошибке" onPress={handleReportBug} />
