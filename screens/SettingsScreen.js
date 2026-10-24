@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Linking, TouchableOpacity } from "react-native";
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Linking,
+    TouchableOpacity,
+} from "react-native";
 import { Bell, Bug, Palette, Users, LogOut, Sparkles } from "lucide-react-native";
 import Constants from "expo-constants";
 
@@ -27,6 +34,8 @@ export default function SettingsScreen({ navigation }) {
     );
     const showSeasonalEffects = useSchedlyStore((state) => state.showSeasonalEffects);
     const setShowSeasonalEffects = useSchedlyStore((state) => state.setShowSeasonalEffects);
+    const showSecretEffect = useSchedlyStore((state) => state.showSecretEffect);
+    const setShowSecretEffect = useSchedlyStore((state) => state.setShowSecretEffect);
     const [isDevModalVisible, setDevModalVisible] = useState(false);
     const [isThemeModalVisible, setThemeModalVisible] = useState(false);
 
@@ -92,8 +101,30 @@ export default function SettingsScreen({ navigation }) {
                 )}
 
                 <View style={styles.versionFooter}>
-                    <Text style={styles.versionText}>Schedly v{version}</Text>
-                    <Text style={styles.buildText}>Сделано с ❤️ к прогулам</Text>
+                    <TouchableOpacity
+                        onLongPress={
+                            showSeasonalEffects
+                                ? () => setShowSecretEffect(!showSecretEffect)
+                                : undefined
+                        }
+                        delayLongPress={5000}
+                        activeOpacity={1}
+                        accessibilityRole="button"
+                        accessibilityHint={
+                            showSeasonalEffects
+                                ? "Удерживайте 5 секунд, чтобы включить или выключить скрытую анимацию"
+                                : undefined
+                        }
+                    >
+                        <Text style={styles.versionText}>Schedly v{version}</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.buildText}>
+                        {showSecretEffect && showSeasonalEffects
+                            ? "Скрытая анимация включена"
+                            : showSecretEffect
+                              ? "Включите анимации для скрытого режима"
+                              : "Сделано с ❤️ к прогулам"}
+                    </Text>
                 </View>
             </ScrollView>
 

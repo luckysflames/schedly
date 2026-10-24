@@ -2,7 +2,13 @@
     "expo": {
         "name": "Schedly",
         "slug": "schedly",
-        "version": "3.4.0",
+        "version": "3.5.0",
+        "runtimeVersion": {
+            "policy": "appVersion"
+        },
+        "updates": {
+            "url": "https://u.expo.dev/ad024185-4f2c-42bd-b6fc-9b764c510e3e"
+        },
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",

@@ -17,6 +17,7 @@ import { useTheme } from "./hooks/useTheme";
 import { SnowEffect } from "./components/effects/SnowEffect";
 import { LeafEffect } from "./components/effects/LeafEffect";
 import { SpringEffect } from "./components/effects/SpringEffect";
+import { SecretEffect } from "./components/effects/SecretEffect";
 import { useSchedlyStore } from "./store/useSchedlyStore";
 
 const Tab = createBottomTabNavigator();
@@ -71,6 +72,7 @@ function HomeTabs() {
 export default function App() {
     const { theme } = useTheme();
     const showSeasonalEffects = useSchedlyStore((state) => state.showSeasonalEffects);
+    const showSecretEffect = useSchedlyStore((state) => state.showSecretEffect);
     const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
     const SeasonalEffect =
         currentMonth >= 2 && currentMonth <= 4
@@ -156,7 +158,11 @@ export default function App() {
                     </Stack.Navigator>
                 </NavigationContainer>
 
-                {showSeasonalEffects && SeasonalEffect && <SeasonalEffect />}
+                {showSeasonalEffects && showSecretEffect ? (
+                    <SecretEffect />
+                ) : (
+                    showSeasonalEffects && SeasonalEffect && <SeasonalEffect />
+                )}
             </SafeAreaView>
         </SafeAreaProvider>
     );

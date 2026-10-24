@@ -15,6 +15,7 @@ const initialState = {
     isVibration: true,
     showScheduleUpdateModal: true,
     showSeasonalEffects: false,
+    showSecretEffect: false,
     themeName: DEFAULT_THEME_NAME,
     selectedGroup: null,
     favoriteGroups: [],
@@ -127,6 +128,7 @@ export const useSchedlyStore = create(
                 setShowScheduleUpdateModal: (showScheduleUpdateModal) =>
                     set({ showScheduleUpdateModal, scheduleLoadResult: null }),
                 setShowSeasonalEffects: (showSeasonalEffects) => set({ showSeasonalEffects }),
+                setShowSecretEffect: (showSecretEffect) => set({ showSecretEffect }),
                 setScheduleLoadResult: (scheduleLoadResult) =>
                     set({
                         scheduleLoadResult: get().showScheduleUpdateModal

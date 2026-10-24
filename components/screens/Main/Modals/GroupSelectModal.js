@@ -280,6 +280,51 @@ export const GroupSelectModal = ({
         onTeacherSearch?.(value);
     };
 
+    const renderEmptyCatalogState = ({
+        loading,
+        error,
+        query,
+        emptyMessage,
+        notFoundMessage,
+        refreshing,
+        onRefresh,
+    }) => {
+        if (loading) {
+            return (
+                <ActivityIndicator
+                    style={styles.emptyLoader}
+                    size="small"
+                    color={theme.accent}
+                />
+            );
+        }
+
+        if (query.trim() && !error) {
+            return <Text style={styles.emptyText}>{notFoundMessage}</Text>;
+        }
+
+        return (
+            <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>
+                    {error ? "Не удалось прочитать сохранённый список" : emptyMessage}
+                </Text>
+                <TouchableOpacity
+                    style={styles.loadCatalogButton}
+                    onPress={onRefresh}
+                    disabled={refreshing}
+                    accessibilityRole="button"
+                >
+                    {refreshing ? (
+                        <ActivityIndicator size="small" color={theme.text} />
+                    ) : null}
+                    <Text style={styles.loadCatalogButtonText}>
+                        {error ? "Повторить загрузку" : "Загрузить список"}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
     return (
         <Modal
             visible={visible}
@@ -413,23 +458,15 @@ export const GroupSelectModal = ({
                                     loadMoreGroups();
                                 }}
                                 onEndReachedThreshold={0.5}
-                                ListEmptyComponent={
-                                    groupLoading ? (
-                                        <ActivityIndicator
-                                            style={styles.emptyLoader}
-                                            size="small"
-                                            color={theme.accent}
-                                        />
-                                    ) : (
-                                        <Text style={styles.emptyText}>
-                                            {groupError
-                                                ? "Не удалось прочитать сохранённый список"
-                                                : searchQuery
-                                                ? "Группы не найдены"
-                                                : "Список групп пуст"}
-                                        </Text>
-                                    )
-                                }
+                                ListEmptyComponent={renderEmptyCatalogState({
+                                    loading: groupLoading,
+                                    error: groupError,
+                                    query: searchQuery,
+                                    emptyMessage: "Список групп пуст",
+                                    notFoundMessage: "Группы не найдены",
+                                    refreshing: refreshingGroups,
+                                    onRefresh: handleRefreshGroups,
+                                })}
                                 renderItem={({ item }) => (
                                     <TouchableOpacity
                                         style={styles.groupItem}
@@ -509,23 +546,15 @@ export const GroupSelectModal = ({
                                     loadMoreTeachers();
                                 }}
                                 onEndReachedThreshold={0.5}
-                                ListEmptyComponent={
-                                    teacherLoading ? (
-                                        <ActivityIndicator
-                                            style={styles.emptyLoader}
-                                            size="small"
-                                            color={theme.accent}
-                                        />
-                                    ) : (
-                                        <Text style={styles.emptyText}>
-                                            {teacherError
-                                                ? "Не удалось прочитать сохранённый список"
-                                                : teacherSearchQuery
-                                                ? "Преподаватели не найдены"
-                                                : "Список преподавателей пуст"}
-                                        </Text>
-                                    )
-                                }
+                                ListEmptyComponent={renderEmptyCatalogState({
+                                    loading: teacherLoading,
+                                    error: teacherError,
+                                    query: teacherSearchQuery,
+                                    emptyMessage: "Список преподавателей пуст",
+                                    notFoundMessage: "Преподаватели не найдены",
+                                    refreshing: refreshingTeachers,
+                                    onRefresh: handleRefreshTeachers,
+                                })}
                                 renderItem={({ item }) => (
                                     <TouchableOpacity
                                         style={styles.groupItem}
@@ -654,6 +683,7 @@ const createLocalStyles = (theme) =>
             padding: 4,
         },
         listContent: {
+            flexGrow: 1,
             paddingBottom: 20,
         },
         groupItem: {
@@ -674,10 +704,31 @@ const createLocalStyles = (theme) =>
             marginLeft: 12,
         },
         emptyText: {
-            paddingVertical: 28,
+            marginBottom: 16,
             color: theme.accentMuted,
             fontSize: 14,
             textAlign: "center",
+        },
+        emptyState: {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 24,
+        },
+        loadCatalogButton: {
+            minHeight: 48,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingHorizontal: 20,
+            borderRadius: 12,
+            backgroundColor: theme.accent,
+        },
+        loadCatalogButtonText: {
+            color: theme.text,
+            fontSize: 15,
+            fontWeight: "600",
         },
         emptyLoader: {
             marginTop: 28,
