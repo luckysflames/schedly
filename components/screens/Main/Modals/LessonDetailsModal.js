@@ -1,6 +1,12 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Clock, MapPin, Info, Users, GraduationCap } from "lucide-react-native";
+import {
+    Clock,
+    GraduationCap,
+    Info,
+    MapPin,
+    Users,
+} from "lucide-react-native";
 import { useTheme } from "../../../../hooks/useTheme";
 import { BottomSheet } from "../../../shared/Modals/BottomSheet";
 import { getLessonTypeFullName, cleanTeacherName } from "../../../../utils/lessonFormatters";
@@ -40,6 +46,11 @@ export const LessonDetailsModal = ({
 
     const lessonTypeName = getLessonTypeFullName(selectedLesson?.type);
     const lessonTeacher = cleanTeacherName(selectedLesson?.teacher);
+    const changedFields = selectedLesson?.scheduleChangeFields || [];
+    const valueStyle = (field) =>
+        changedFields.includes(field) || selectedLesson?.scheduleChangeType === "added"
+            ? { color: theme.accent, fontWeight: "700" }
+            : null;
 
     if (!selectedLesson) return null;
 
@@ -51,30 +62,39 @@ export const LessonDetailsModal = ({
         >
             <View style={styles.bottomSheetHeader}>
                 <View style={[styles.bsIconBullet, { backgroundColor: bulletColor }]} />
-                <Text style={styles.bottomSheetTitle}>{subjectName}</Text>
+                <Text
+                    style={[
+                        styles.bottomSheetTitle,
+                        valueStyle("subject"),
+                    ]}
+                >
+                    {subjectName}
+                </Text>
             </View>
 
             <View style={styles.bottomSheetContent}>
                 <View style={styles.bsRow}>
                     <Clock size={20} color={theme.accent} />
-                    <Text style={styles.bsText}>{selectedLesson?.time || "—"}</Text>
+                    <Text style={[styles.bsText, valueStyle("time")]}>
+                        {selectedLesson?.time || "—"}
+                    </Text>
                 </View>
                 <View style={styles.bsRow}>
                     <MapPin size={20} color={theme.accent} />
-                    <Text style={styles.bsText}>
+                    <Text style={[styles.bsText, valueStyle("auditory")]}>
                         {selectedLesson?.auditory || "Аудитория не указана"}
                     </Text>
                 </View>
                 {lessonTypeName && (
                     <View style={styles.bsRow}>
                         <Info size={20} color={theme.accent} />
-                        <Text style={styles.bsText}>{lessonTypeName}</Text>
+                        <Text style={[styles.bsText, valueStyle("type")]}>{lessonTypeName}</Text>
                     </View>
                 )}
                 {lessonTeacher && (
                     <View style={styles.bsRow}>
                         <GraduationCap size={20} color={theme.accent} />
-                        <Text style={styles.bsText}>{lessonTeacher}</Text>
+                        <Text style={[styles.bsText, valueStyle("teacher")]}>{lessonTeacher}</Text>
                     </View>
                 )}
                 <View style={styles.bsRow}>

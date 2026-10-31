@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { normalizeScheduleData } from "../utils/normalizeScheduleData";
 import { getSubjectFilterKey } from "../utils/subjectFilter";
+import { getScheduleLessonKey } from "../utils/compareScheduleUpdates";
+import { useSchedlyStore } from "../store/useSchedlyStore";
 
 const HOUR_HEIGHT = 70;
 const HOURS = [
@@ -28,6 +30,24 @@ export const useScheduleGrid = (
     hiddenSubjects = [],
     comparisonMode = false,
 ) => {
+    const scheduleChangeHighlights = useSchedlyStore(
+        (state) => state.scheduleChangeHighlights,
+    );
+    const storedScheduleData = useSchedlyStore((state) => state.scheduleData);
+    const selectedGroupId = useSchedlyStore((state) => state.selectedGroup?.id);
+    const scheduleDataGroupId = useSchedlyStore((state) => state.scheduleDataGroupId);
+    const showScheduleChangeHighlights = useSchedlyStore(
+        (state) => state.showScheduleChangeHighlights,
+    );
+    const shouldHighlightChanges =
+        showScheduleChangeHighlights &&
+        !comparisonMode &&
+        scheduleData === storedScheduleData &&
+        selectedGroupId !== undefined &&
+        selectedGroupId !== null &&
+        scheduleDataGroupId !== undefined &&
+        scheduleDataGroupId !== null &&
+        String(selectedGroupId) === String(scheduleDataGroupId);
     const daysList = useMemo(() => {
         const now = new Date();
         const templates = [];
@@ -102,6 +122,9 @@ export const useScheduleGrid = (
 
         if (!scheduleData) return templates;
         const rawList = normalizeScheduleData(scheduleData);
+        const highlightsByKey = new Map(
+            scheduleChangeHighlights.map((highlight) => [highlight.key, highlight]),
+        );
 
         return templates.map((templateDay) => {
             const matchedGroup = rawList.find((group) => {
@@ -120,13 +143,32 @@ export const useScheduleGrid = (
                           !hiddenSubjects.includes(getSubjectFilterKey(lesson, comparisonMode)),
                   )
                 : [];
-
             return {
                 ...templateDay,
-                lessons: filteredLessons,
+                lessons: filteredLessons.map((lesson) => {
+                    const highlight = shouldHighlightChanges
+                        ? highlightsByKey.get(getScheduleLessonKey(lesson, matchedGroup.date))
+                        : null;
+                    return highlight
+                        ? {
+                              ...lesson,
+                              scheduleDate: matchedGroup.date,
+                              scheduleChangeType: highlight.type,
+                              scheduleChangeFields: highlight.fields,
+                          }
+                        : lesson;
+                }),
             };
         });
-    }, [scheduleData, currentView, offset, hiddenSubjects, comparisonMode]);
+    }, [
+        scheduleData,
+        currentView,
+        offset,
+        hiddenSubjects,
+        comparisonMode,
+        scheduleChangeHighlights,
+        shouldHighlightChanges,
+    ]);
 
     const monthTitle = useMemo(() => {
         if (!daysList || daysList.length === 0) return "";

@@ -9,19 +9,26 @@ import {
     setAuthStateUpdater,
 } from "../utils/api";
 import { areSchedulesEqual } from "../utils/normalizeScheduleData";
+import {
+    compareScheduleUpdatesById,
+    getScheduleLessonKey,
+} from "../utils/compareScheduleUpdates";
 
 const initialState = {
     _hasHydrated: false,
     isVibration: true,
     showScheduleUpdateModal: true,
+    showScheduleChangeHighlights: false,
     showSeasonalEffects: false,
     showSecretEffect: false,
     themeName: DEFAULT_THEME_NAME,
     selectedGroup: null,
+    scheduleDataGroupId: null,
     favoriteGroups: [],
     favoriteTeachers: [],
     scheduleData: null,
     scheduleLoadResult: null,
+    scheduleChangeHighlights: [],
     hiddenSubjects: [],
     isLoading: false,
     error: null,
@@ -127,6 +134,12 @@ export const useSchedlyStore = create(
                 setIsVibration: (isVibration) => set({ isVibration }),
                 setShowScheduleUpdateModal: (showScheduleUpdateModal) =>
                     set({ showScheduleUpdateModal, scheduleLoadResult: null }),
+                setShowScheduleChangeHighlights: (showScheduleChangeHighlights) =>
+                    set({
+                        showScheduleChangeHighlights,
+                        ...(!showScheduleChangeHighlights ? { scheduleChangeHighlights: [] } : {}),
+                    }),
+                setScheduleDataGroupId: (scheduleDataGroupId) => set({ scheduleDataGroupId }),
                 setShowSeasonalEffects: (showSeasonalEffects) => set({ showSeasonalEffects }),
                 setShowSecretEffect: (showSecretEffect) => set({ showSecretEffect }),
                 setScheduleLoadResult: (scheduleLoadResult) =>
@@ -144,7 +157,14 @@ export const useSchedlyStore = create(
 
                 // --- Schedule & Groups Actions ---
                 setSelectedGroup: (selectedGroup) => {
-                    set({ selectedGroup });
+                    const selectedId = selectedGroup?.id;
+                    const currentId = get().selectedGroup?.id;
+                    set({
+                        selectedGroup,
+                        ...(String(selectedId) !== String(currentId)
+                            ? { scheduleChangeHighlights: [] }
+                            : {}),
+                    });
                     if (selectedGroup?.id) {
                         get().loadSchedule(selectedGroup.id);
                     }
@@ -220,28 +240,40 @@ export const useSchedlyStore = create(
                     });
                 },
 
-                setScheduleData: (scheduleData) => set({ scheduleData }),
+                setScheduleData: (scheduleData) =>
+                    set({
+                        scheduleData,
+                        scheduleDataGroupId: get().selectedGroup?.id ?? null,
+                        scheduleChangeHighlights: [],
+                    }),
 
                 loadSchedule: async (idGroup) => {
                     set({ isLoading: true, error: null, scheduleLoadResult: null });
                     const previousData = get().scheduleData;
+                    const previousDataGroupId = get().scheduleDataGroupId;
+                    const hasPreviousDataForGroup =
+                        previousDataGroupId !== null &&
+                        previousDataGroupId !== undefined &&
+                        idGroup !== null &&
+                        idGroup !== undefined &&
+                        String(previousDataGroupId) === String(idGroup);
+                    const hasPreviousData =
+                        previousData &&
+                        (Array.isArray(previousData)
+                            ? previousData.length > 0
+                            : Object.keys(previousData).length > 0);
 
                     try {
                         const data = await fetchSchedule(idGroup);
                         const hasData =
                             data &&
                             (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0);
-                        const hasPreviousData =
-                            previousData &&
-                            (Array.isArray(previousData)
-                                ? previousData.length > 0
-                                : Object.keys(previousData).length > 0);
 
                         if (!hasData) {
                             const result = {
                                 status: "fallback",
                                 reason: "empty",
-                                hasLocalData: Boolean(hasPreviousData),
+                                hasLocalData: Boolean(hasPreviousData && hasPreviousDataForGroup),
                             };
                             set({
                                 isLoading: false,
@@ -250,21 +282,60 @@ export const useSchedlyStore = create(
                             return get().scheduleLoadResult;
                         }
 
-                        const isUnchanged = areSchedulesEqual(previousData, data);
+                        const hasComparablePrevious =
+                            hasPreviousData && hasPreviousDataForGroup;
+                        const isUnchanged =
+                            hasComparablePrevious && areSchedulesEqual(previousData, data);
+                        const result = {
+                            status: !hasComparablePrevious
+                                ? "loaded"
+                                : isUnchanged
+                                  ? "unchanged"
+                                  : "updated",
+                            ...(hasComparablePrevious &&
+                            !isUnchanged &&
+                            get().showScheduleChangeHighlights
+                                ? {
+                                      changes: compareScheduleUpdatesById(previousData, data),
+                                  }
+                                : {}),
+                        };
+                        const scheduleChangeHighlights = (result.changes || [])
+                            .filter(
+                                (change) =>
+                                    change.type === "changed" || change.type === "added",
+                            )
+                            .map((change) => {
+                                const lesson =
+                                    change.type === "changed"
+                                        ? change.nextLesson
+                                        : change.lesson;
+                                return {
+                                    key: getScheduleLessonKey(
+                                        lesson,
+                                        lesson.comparable.date,
+                                    ),
+                                    type: change.type,
+                                    fields:
+                                        change.type === "changed"
+                                            ? change.fields.map((field) => field.field)
+                                            : ["new"],
+                                };
+                            });
 
                         set({
                             scheduleData: data,
+                            scheduleDataGroupId: idGroup,
+                            scheduleChangeHighlights,
                             isLoading: false,
-                            scheduleLoadResult: get().showScheduleUpdateModal
-                                ? { status: isUnchanged ? "unchanged" : "updated" }
-                                : null,
+                            scheduleLoadResult: get().showScheduleUpdateModal ? result : null,
                         });
                         return get().scheduleLoadResult;
                     } catch (e) {
                         const result = {
                             status: "fallback",
                             reason: e.code === "NETWORK_ERROR" ? "offline" : "unavailable",
-                            hasLocalData: Boolean(previousData),
+                            hasLocalData: Boolean(hasPreviousData && hasPreviousDataForGroup),
                         };
                         set({
                             error: e.message,
@@ -313,6 +384,7 @@ export const useSchedlyStore = create(
                     isLoading,
                     error,
                     scheduleLoadResult,
+                    scheduleChangeHighlights,
                     isViewChanging,
                     isAuthLoading,
                     groups,
@@ -324,6 +396,9 @@ export const useSchedlyStore = create(
             onRehydrateStorage: () => (state) => {
                 const currentGroup = state?.selectedGroup;
                 state?.setHasHydrated(true);
+                if (state?.scheduleData && currentGroup?.id && !state.scheduleDataGroupId) {
+                    state.setScheduleDataGroupId(currentGroup.id);
+                }
                 if (currentGroup?.id) {
                     state.loadSchedule(currentGroup.id);
                 }

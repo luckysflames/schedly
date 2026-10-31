@@ -354,6 +354,7 @@ export const useMainScreen = () => {
 
     // Тексты для алертов обновления
     const getAlertTitle = () => {
+        if (scheduleLoadResult?.status === "loaded") return "Расписание загружено";
         if (scheduleLoadResult?.status === "updated") return "Расписание изменено";
         if (scheduleLoadResult?.status === "unchanged") return "Расписание без изменений";
         if (scheduleLoadResult?.reason === "offline") return "Нет интернет-соединения";
@@ -361,13 +362,16 @@ export const useMainScreen = () => {
     };
 
     const getAlertMessage = () => {
+        if (scheduleLoadResult?.status === "loaded") {
+            return "Получена актуальная версия расписания";
+        }
         if (scheduleLoadResult?.status === "updated")
-            return "Загружены свежие данные от API с изменениями.";
+            return "Загружены свежие данные от API с изменениями";
         if (scheduleLoadResult?.status === "unchanged")
-            return "Данные от API совпадают с сохранённой версией.";
+            return "Данные от API совпадают с сохранённой версией";
         return scheduleLoadResult?.hasLocalData
-            ? "Будет показана последняя сохранённая версия расписания."
-            : "Сохранённой версии расписания пока нет.";
+            ? "Будет показана последняя сохранённая версия расписания"
+            : "Сохранённой версии расписания пока нет";
     };
 
     return {

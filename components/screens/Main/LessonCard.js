@@ -24,6 +24,7 @@ export const LessonCard = ({
     const cardBg = comparisonMode
         ? lesson.color || defaultBg
         : customSubjectColors[subjectName] || lesson.color || defaultBg;
+    const isScheduleChanged = Boolean(lesson.scheduleChangeType);
 
     const lessonTypeName = getLessonTypeFullName(lesson.type);
     const teacherName = cleanTeacherName(lesson.teacher);
@@ -44,6 +45,8 @@ export const LessonCard = ({
                     marginHorizontal: position.marginHorizontal,
                     backgroundColor: cardBg,
                     opacity: isPast ? 0.25 : 1,
+                    borderWidth: isScheduleChanged ? 1 : 0,
+                    borderColor: isScheduleChanged ? theme.accent : "transparent",
                 },
             ]}
         >
@@ -74,7 +77,7 @@ export const LessonCard = ({
                 </View>
             ) : (
                 <Text style={styles.cardInfo} numberOfLines={1}>
-                    {lesson.auditory || lesson.time}
+                    {lesson.auditory || "?-???"}
                 </Text>
             )}
         </TouchableOpacity>

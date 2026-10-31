@@ -2,7 +2,7 @@
     "expo": {
         "name": "Schedly",
         "slug": "schedly",
-        "version": "3.5.0",
+        "version": "3.6.0",
         "runtimeVersion": {
             "policy": "appVersion"
         },

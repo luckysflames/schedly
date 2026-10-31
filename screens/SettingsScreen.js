@@ -7,7 +7,7 @@ import {
     Linking,
     TouchableOpacity,
 } from "react-native";
-import { Bell, Bug, Palette, Users, LogOut, Sparkles } from "lucide-react-native";
+import { Bell, Bug, Palette, Users, LogOut, Sparkles, CodeXml } from "lucide-react-native";
 import Constants from "expo-constants";
 
 import { useSchedlyStore } from "../store/useSchedlyStore";
@@ -31,6 +31,12 @@ export default function SettingsScreen({ navigation }) {
     );
     const setShowScheduleUpdateModal = useSchedlyStore(
         (state) => state.setShowScheduleUpdateModal,
+    );
+    const showScheduleChangeHighlights = useSchedlyStore(
+        (state) => state.showScheduleChangeHighlights,
+    );
+    const setShowScheduleChangeHighlights = useSchedlyStore(
+        (state) => state.setShowScheduleChangeHighlights,
     );
     const showSeasonalEffects = useSchedlyStore((state) => state.showSeasonalEffects);
     const setShowSeasonalEffects = useSchedlyStore((state) => state.setShowSeasonalEffects);
@@ -73,6 +79,13 @@ export default function SettingsScreen({ navigation }) {
                     type="switch"
                     value={showScheduleUpdateModal}
                     onValueChange={setShowScheduleUpdateModal}
+                />
+                <SettingItem
+                    icon={CodeXml}
+                    label="Подсветка изменений (dev)"
+                    type="switch"
+                    value={showScheduleChangeHighlights}
+                    onValueChange={setShowScheduleChangeHighlights}
                 />
                 <SettingItem
                     icon={Sparkles}

@@ -148,6 +148,10 @@ export const MonthViewContent = ({
                                                                     {
                                                                         backgroundColor: lessonBg,
                                                                         opacity: past ? 0.25 : 1,
+                                                                        borderWidth: lesson.scheduleChangeType ? 0.5 : 0,
+                                                                        borderColor: lesson.scheduleChangeType
+                                                                            ? theme.accent
+                                                                            : "transparent",
                                                                     },
                                                                 ]}
                                                                 onPress={() =>
@@ -158,10 +162,7 @@ export const MonthViewContent = ({
                                                                 }
                                                                 activeOpacity={0.8}
                                                             >
-                                                                <Text
-                                                                    style={styles.lessonBarText}
-                                                                    numberOfLines={1}
-                                                                >
+                                                                <Text style={styles.lessonBarText} numberOfLines={1}>
                                                                     {lesson.auditory || "—"}
                                                                 </Text>
                                                             </TouchableOpacity>

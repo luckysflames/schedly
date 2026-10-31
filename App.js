@@ -18,6 +18,7 @@ import { SnowEffect } from "./components/effects/SnowEffect";
 import { LeafEffect } from "./components/effects/LeafEffect";
 import { SpringEffect } from "./components/effects/SpringEffect";
 import { SecretEffect } from "./components/effects/SecretEffect";
+import { BirthdayEffect } from "./components/effects/BirthdayEffect";
 import { useSchedlyStore } from "./store/useSchedlyStore";
 
 const Tab = createBottomTabNavigator();
@@ -27,6 +28,26 @@ const HomeStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
 const FALLBACK_MAIN_COLOR = "#000000";
+
+const getBirthdayMonthAndDay = (birthday) => {
+    if (typeof birthday !== "string") return null;
+
+    const isoDate = birthday.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    const localizedDate = birthday.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    const match = isoDate || localizedDate;
+    if (!match) return null;
+
+    const year = Number(match[isoDate ? 1 : 3]);
+    const month = Number(match[2]);
+    const day = Number(isoDate ? match[3] : match[1]);
+    const date = new Date(year, month - 1, day);
+
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        return null;
+    }
+
+    return { month: month - 1, day };
+};
 
 function PassStackNavigator() {
     return (
@@ -73,7 +94,15 @@ export default function App() {
     const { theme } = useTheme();
     const showSeasonalEffects = useSchedlyStore((state) => state.showSeasonalEffects);
     const showSecretEffect = useSchedlyStore((state) => state.showSecretEffect);
-    const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
+    const token = useSchedlyStore((state) => state.token);
+    const birthday = useSchedlyStore((state) => state.userInfo?.birthday);
+    const [currentDate, setCurrentDate] = useState(() => new Date());
+    const currentMonth = currentDate.getMonth();
+    const birthdayMonthAndDay = getBirthdayMonthAndDay(birthday);
+    const isBirthday =
+        Boolean(token) &&
+        birthdayMonthAndDay?.month === currentDate.getMonth() &&
+        birthdayMonthAndDay?.day === currentDate.getDate();
     const SeasonalEffect =
         currentMonth >= 2 && currentMonth <= 4
             ? SpringEffect
@@ -133,7 +162,7 @@ export default function App() {
 
         const appStateSubscription = AppState.addEventListener("change", (nextAppState) => {
             if (nextAppState === "active") {
-                setCurrentMonth(new Date().getMonth());
+                setCurrentDate(new Date());
                 configureNavBar();
             }
         });
@@ -143,6 +172,29 @@ export default function App() {
             appStateSubscription.remove();
             if (hideTimer) clearTimeout(hideTimer);
         };
+    }, []);
+
+    useEffect(() => {
+        let midnightTimeout;
+        const scheduleDateRefresh = () => {
+            const now = new Date();
+            const nextMidnight = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() + 1,
+            ).getTime();
+
+            midnightTimeout = setTimeout(
+                () => {
+                    setCurrentDate(new Date());
+                    scheduleDateRefresh();
+                },
+                nextMidnight - now.getTime() + 100,
+            );
+        };
+
+        scheduleDateRefresh();
+        return () => clearTimeout(midnightTimeout);
     }, []);
 
     return (
@@ -158,11 +210,13 @@ export default function App() {
                     </Stack.Navigator>
                 </NavigationContainer>
 
-                {showSeasonalEffects && showSecretEffect ? (
-                    <SecretEffect />
-                ) : (
-                    showSeasonalEffects && SeasonalEffect && <SeasonalEffect />
-                )}
+                {!isBirthday &&
+                    (showSeasonalEffects && showSecretEffect ? (
+                        <SecretEffect />
+                    ) : (
+                        showSeasonalEffects && SeasonalEffect && <SeasonalEffect />
+                    ))}
+                {isBirthday && <BirthdayEffect />}
             </SafeAreaView>
         </SafeAreaProvider>
     );
