@@ -41,8 +41,10 @@ export const MonthViewContent = ({
             </View>
 
             <ScrollView
+                nestedScrollEnabled
                 showsVerticalScrollIndicator={false}
                 style={styles.scrollContainer}
+                contentContainerStyle={styles.scrollContent}
                 refreshControl={
                     onRefresh && (
                         <RefreshControl
@@ -200,6 +202,7 @@ const createLocalStyles = (theme) =>
             fontWeight: "600",
         },
         scrollContainer: { flex: 1 },
+        scrollContent: { paddingBottom: 56 },
         weekRow: {
             flexDirection: "row",
             height: 115,

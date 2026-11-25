@@ -7,7 +7,7 @@ import {
     Linking,
     TouchableOpacity,
 } from "react-native";
-import { Bell, Bug, Palette, Users, LogOut, Sparkles, CodeXml } from "lucide-react-native";
+import { Bell, Bug, Palette, Users, LogOut, Sparkles, ScrollText } from "lucide-react-native";
 import Constants from "expo-constants";
 
 import { useSchedlyStore } from "../store/useSchedlyStore";
@@ -81,8 +81,8 @@ export default function SettingsScreen({ navigation }) {
                     onValueChange={setShowScheduleUpdateModal}
                 />
                 <SettingItem
-                    icon={CodeXml}
-                    label="Подсветка изменений (dev)"
+                    icon={ScrollText}
+                    label="Подсветка изменений"
                     type="switch"
                     value={showScheduleChangeHighlights}
                     onValueChange={setShowScheduleChangeHighlights}
